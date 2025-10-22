@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Утиный Остров</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #FFD700; /* жёлтый */
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #score {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    }
+
+    #duck {
+      width: 120px;
+      height: 120px;
+      background: #FFD700;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s;
+    }
+
+    #duck:active {
+      transform: scale(0.95);
+    }
+
+    #shop {
+      margin-top: 30px;
+    }
+
+    .btn {
+      background: transparent;
+      border: 2px solid #FFD700;
+      color: #FFD700;
+      padding: 8px 16px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 215, 0, 0.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Зернышек: 0</div>
+  <div id="duck">🦆</div>
+  <div id="shop">
+    <button class="btn" id="buyDuck">Купить утку (10)</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
