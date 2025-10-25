@@ -1,4 +1,4 @@
-// Telegram WebApp (опционально)
+// Telegram WebApp
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.expand();
@@ -12,48 +12,79 @@ let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   nextDuckId: 1
 };
 
-// DOM
 const pondEl = document.getElementById('pond');
 const scoreEl = document.getElementById('score');
 const buyBtn = document.getElementById('buyDuck');
+const grassEl = document.getElementById('grass');
 
-// Обновление UI
 function updateUI() {
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
   buyBtn.disabled = gameData.seeds < 10;
 }
 
-// Класс Утки
 class Duck {
   constructor(id) {
     this.id = id;
     this.x = Math.random() * (pondEl.offsetWidth - 60);
-    this.y = pondEl.offsetHeight - 100 + Math.random() * 30; // на берегу
-    this.state = 'walk'; // walk, peck, swim
-    this.peckCooldown = 0;
+    this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
+    this.state = 'walk';
+    this.workCount = 0;
+    this.restUntil = 0;
     this.element = document.createElement('div');
     this.element.className = 'duck';
-    this.element.textContent = '🦆';
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
+
+    // Анимация ходьбы
+    this.walkAnimation = setInterval(() => {
+      if (this.state === 'walk') {
+        this.element.style.transform = 'scaleX(1)';
+        setTimeout(() => {
+          this.element.style.transform = 'scaleX(-1)';
+        }, 300);
+      }
+    }, 600);
+
     this.updatePosition();
   }
 
-  peck() {
-    if (this.peckCooldown <= 0) {
-      this.state = 'peck';
-      this.element.classList.add('pecking');
-      gameData.seeds += 1;
-      saveGame();
-      updateUI();
-
-      setTimeout(() => {
-        this.element.classList.remove('pecking');
-        this.state = 'walk';
-        this.peckCooldown = 30; // 3 секунды при 10 FPS
-      }, 300);
+  peck(isAuto = false) {
+    if (this.state === 'rest') return;
+    if (isAuto && this.workCount >= 3) {
+      this.rest();
+      return;
     }
+
+    this.state = 'peck';
+    this.element.classList.add('pecking');
+    gameData.seeds += isAuto ? 2 : 1;
+    saveGame();
+    updateUI();
+
+    setTimeout(() => {
+      this.element.classList.remove('pecking');
+      if (isAuto) {
+        this.workCount++;
+        this.state = 'walk';
+      } else {
+        this.state = 'walk';
+      }
+    }, 300);
+  }
+
+  rest() {
+    this.state = 'rest';
+    this.element.textContent = '😴';
+    this.workCount = 0;
+    this.restUntil = Date.now() + 10000;
+
+    setTimeout(() => {
+      if (this.state === 'rest') {
+        this.element.textContent = '🦆';
+        this.state = 'walk';
+      }
+    }, 10000);
   }
 
   updatePosition() {
@@ -62,26 +93,23 @@ class Duck {
   }
 
   update() {
-    if (this.peckCooldown > 0) this.peckCooldown--;
+    if (this.state === 'rest' && Date.now() > this.restUntil) {
+      this.element.textContent = '🦆';
+      this.state = 'walk';
+    }
 
     if (this.state === 'walk') {
-      // Простое блуждание
-      this.x += (Math.random() - 0.5) * 4;
-      this.y += (Math.random() - 0.5) * 2;
-
-      // Ограничение по границам
+      this.x += (Math.random() - 0.5) * 3;
+      this.y += (Math.random() - 0.5) * 1.5;
       this.x = Math.max(10, Math.min(pondEl.offsetWidth - 60, this.x));
       this.y = Math.max(10, Math.min(pondEl.offsetHeight - 70, this.y));
     }
-
     this.updatePosition();
   }
 }
 
-// Массив уток
 let ducks = [];
 
-// Инициализация уток
 function loadDucks() {
   for (let i = 0; i < gameData.ducks; i++) {
     const duck = new Duck(gameData.nextDuckId++);
@@ -89,12 +117,10 @@ function loadDucks() {
   }
 }
 
-// Сохранение
 function saveGame() {
   localStorage.setItem('duckIsle', JSON.stringify(gameData));
 }
 
-// Покупка утки
 buyBtn.addEventListener('click', () => {
   if (gameData.seeds >= 10) {
     gameData.seeds -= 10;
@@ -106,20 +132,37 @@ buyBtn.addEventListener('click', () => {
   }
 });
 
-// Клик по утке — клюёт
 pondEl.addEventListener('click', (e) => {
   const clickedDuck = e.target.closest('.duck');
   if (clickedDuck) {
-    const duckId = parseInt(clickedDuck.style.left);
-    const duck = ducks.find(d => Math.abs(d.x - duckId) < 10);
-    if (duck) duck.peck();
+    const duck = ducks.find(d => d.element === clickedDuck);
+    if (duck) duck.peck(false);
   }
 });
+
+// Автоматическая работа
+setInterval(() => {
+  ducks.forEach(duck => {
+    if (duck.state !== 'rest' && Math.random() < 0.2) {
+      duck.peck(true);
+    }
+  });
+}, 10000);
 
 // Основной цикл
 setInterval(() => {
   ducks.forEach(duck => duck.update());
 }, 100);
+
+// Генерация травы
+for (let i = 0; i < 15; i++) {
+  const blade = document.createElement('div');
+  blade.className = 'grass-blade';
+  blade.style.left = `${Math.random() * 100}%`;
+  blade.style.bottom = `${Math.random() * 10 + 5}px`;
+  blade.style.animationDelay = `${Math.random() * 3}s`;
+  grassEl.appendChild(blade);
+}
 
 // Запуск
 loadDucks();
