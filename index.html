@@ -13,8 +13,8 @@
     }
 
     body {
-      background: #0F1A2C; /* тёмная ночь */
-      color: #E0F7FA; /* светло-бирюзовый текст */
+      background: #0F1A2C;
+      color: #E0F7FA;
       font-family: 'Segoe UI', sans-serif;
       overflow: hidden;
       height: 100vh;
@@ -39,11 +39,34 @@
     #pond {
       width: 95vw;
       height: 70vh;
-      background: linear-gradient(to bottom, #1E3A5F, #0F1A2C);
-      border-radius: 12px;
       position: relative;
       overflow: hidden;
+      border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .water {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #1E3A5F, #0F1A2C);
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 40px;
+      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSI0MHB4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wLDQwIEwxMDAsNDAgTDEwMCwwIEwwLDAgWiIgZmlsbD0iIzFFM0E1RiIvPjxwYXRoIGQ9Ik0wLDQwIEwxMDAsNDAgTDEwMCwyMCBMOCwwIEwwLDAgWiIgZmlsbD0iIzI3NDY2NiIvPjxwYXRoIGQ9Ik0wLDQwIEwxMDAsNDAgTDEwMCwxMCBMNSwwIEwwLDAgWiIgZmlsbD0iIzJFNDRGRiIvPjwvc3ZnPg==') repeat-x;
+      animation: wave 4s linear infinite;
+    }
+
+    @keyframes wave {
+      0% { background-position: 0 0; }
+      100% { background-position: 100% 0; }
     }
 
     .ground {
@@ -51,21 +74,52 @@
       bottom: 0;
       width: 100%;
       height: 30%;
-      background: #2E4A3D; /* тёмная трава */
+      background: #2E4A3D;
+      z-index: 2;
+    }
+
+    .grass {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 30%;
+      z-index: 3;
+    }
+
+    .grass-blade {
+      position: absolute;
+      width: 4px;
+      height: 20px;
+      background: #3E6B4C;
+      transform-origin: bottom;
+      animation: sway 3s ease-in-out infinite;
+    }
+
+    @keyframes sway {
+      0% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+      100% { transform: rotate(-5deg); }
+    }
+
+    .reed {
+      position: absolute;
+      bottom: 0;
+      width: 10px;
+      height: 40px;
+      background: #3E6B4C;
+      border-radius: 2px;
+      z-index: 4;
     }
 
     .duck {
       position: absolute;
-      width: 50px;
-      height: 50px;
-      background: #FFF8E1; /* кремовая утка */
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      user-select: none;
+      width: 60px;
+      height: 60px;
+      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiIGZpbGw9IiNGRkY4RTEiLz48cGF0aCBkPSJNMzAsMzAgTDI1LDI1IEwyMCwyMCBMNDAsMjAgTDQ1LDI1IEwzMCwzMCBaIiBmaWxsPSIjRkZERkQwIi8+PC9zdmc+') no-repeat center;
+      background-size: contain;
+      cursor: pointer;
       transition: transform 0.2s, left 1s, top 1s;
+      z-index: 5;
     }
 
     .duck.pecking {
@@ -74,7 +128,7 @@
 
     .btn {
       background: transparent;
-      border: 2px solid #7DCEA0; /* мятный */
+      border: 2px solid #7DCEA0;
       color: #E0F7FA;
       padding: 8px 16px;
       margin-top: 12px;
@@ -95,7 +149,14 @@
     <button class="btn" id="buyDuck">Купить утку (10)</button>
   </div>
   <div id="pond">
+    <div class="water"></div>
+    <div class="wave"></div>
     <div class="ground"></div>
+    <div class="grass" id="grass"></div>
+    <div class="reed" style="left: 10%;"></div>
+    <div class="reed" style="left: 20%;"></div>
+    <div class="reed" style="left: 80%;"></div>
+    <div class="reed" style="left: 90%;"></div>
   </div>
 
   <script src="script.js"></script>
