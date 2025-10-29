@@ -5,10 +5,10 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-// Сохранение данных
+// Загрузка или инициализация данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   seeds: 0,
-  ducks: 0,
+  ducks: 1,          // уже есть 1 утка
   nextDuckId: 1
 };
 
@@ -145,9 +145,13 @@ class Duck {
 
 let ducks = [];
 
-function loadDucks() {
-  // Восстановление уток из localStorage не реализовано (для простоты)
-  // Можно добавить позже при необходимости
+function loadInitialDuck() {
+  // Создаём одну обычную утку при первом запуске
+  if (ducks.length === 0 && gameData.ducks === 1 && gameData.nextDuckId === 1) {
+    const initialDuck = new Duck(0, 'normal');
+    ducks.push(initialDuck);
+    gameData.nextDuckId = 1; // следующая утка получит ID = 1
+  }
 }
 
 function saveGame() {
@@ -230,4 +234,5 @@ function showQuackBubble(duckElement) {
 }
 
 // Запуск
+loadInitialDuck();
 updateUI();
