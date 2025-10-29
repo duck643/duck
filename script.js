@@ -8,27 +8,33 @@ if (tg) {
 // Сохранение данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   seeds: 0,
-  ducks: 1,
+  ducks: 0,
   nextDuckId: 1
 };
 
 const pondEl = document.getElementById('pond');
 const scoreEl = document.getElementById('score');
-const buyBtn = document.getElementById('buyDuck');
 const duckCountEl = document.getElementById('duckCount');
+
+const buyNormalBtn = document.getElementById('buyNormal');
+const buyHatBtn = document.getElementById('buyHat');
+const buySunglassesBtn = document.getElementById('buySunglasses');
 
 function updateUI() {
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
-  buyBtn.disabled = gameData.seeds < 10;
   duckCountEl.textContent = `Уток: ${ducks.length}`;
+  buyNormalBtn.disabled = gameData.seeds < 20;
+  buyHatBtn.disabled = gameData.seeds < 50;
+  buySunglassesBtn.disabled = gameData.seeds < 100;
 }
 
 class Duck {
-  constructor(id) {
+  constructor(id, type) {
     this.id = id;
+    this.type = type; // 'normal', 'hat', 'sunglasses'
     this.x = Math.random() * (pondEl.offsetWidth - 60);
     this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
-    this.state = 'walk'; // 'walk' или 'swim'
+    this.state = 'walk';
     this.workCount = 0;
     this.restUntil = 0;
     this.element = document.createElement('div');
@@ -36,18 +42,19 @@ class Duck {
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
+    this.updateImage();
+  }
 
-    // Выбираем тип утки (обычная, в шляпе, в очках)
-    const type = Math.random();
-    if (type < 0.33) {
-      this.type = 'normal';
-    } else if (type < 0.66) {
-      this.type = 'hat';
-    } else {
-      this.type = 'sunglasses';
+  updateImage() {
+    let img = 'duck_normal.png';
+    if (this.type === 'hat') img = 'duck_hat.png';
+    if (this.type === 'sunglasses') img = 'duck_sunglasses.png';
+    if (this.state === 'swim') {
+      if (this.type === 'normal') img = 'duck_swim.png';
+      if (this.type === 'hat') img = 'duck_hat_swim.png';
+      if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
     }
-
-    this.updatePosition();
+    this.element.style.backgroundImage = `url('${img}')`;
   }
 
   peck(isAuto = false) {
@@ -58,22 +65,23 @@ class Duck {
     }
 
     this.state = 'peck';
-    this.element.style.backgroundImage = `url('duck_${this.type}_pecking.png')`;
+    // Временно меняем на pecking (если есть)
+    let img = 'duck_pecking.png';
+    if (this.type === 'hat') img = 'duck_hat_pecking.png';
+    if (this.type === 'sunglasses') img = 'duck_sunglasses_pecking.png';
+    this.element.style.backgroundImage = `url('${img}')`;
+
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
     updateUI();
 
-    // Показываем облако "кря"
+    // Облако "кря"
     showQuackBubble(this.element);
 
     setTimeout(() => {
-      this.element.style.backgroundImage = `url('duck_${this.type}.png')`;
-      if (isAuto) {
-        this.workCount++;
-        this.state = 'walk';
-      } else {
-        this.state = 'walk';
-      }
+      this.state = 'walk';
+      this.updateImage();
+      if (isAuto) this.workCount++;
     }, 300);
   }
 
@@ -85,6 +93,20 @@ class Duck {
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
+        this.updateImage();
+        // Через 5 секунд снова идёт плавать
+        setTimeout(() => {
+          if (this.workCount >= 3) {
+            this.state = 'swim';
+            this.updateImage();
+            this.y = pondEl.offsetHeight - 50;
+            setTimeout(() => {
+              this.state = 'walk';
+              this.updateImage();
+              this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
+            }, 5000);
+          }
+        }, 1000);
       }
     }, 10000);
   }
@@ -97,6 +119,7 @@ class Duck {
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
+      this.updateImage();
     }
 
     if (this.state === 'walk') {
@@ -105,14 +128,13 @@ class Duck {
       this.x = Math.max(10, Math.min(pondEl.offsetWidth - 60, this.x));
       this.y = Math.max(10, Math.min(pondEl.offsetHeight - 70, this.y));
 
-      // Если утка устала — уходит плавать
       if (this.workCount >= 3) {
         this.state = 'swim';
-        this.element.style.backgroundImage = `url('duck_${this.type}_swim.png')`;
-        this.y = pondEl.offsetHeight - 50; // Плавает на воде
+        this.updateImage();
+        this.y = pondEl.offsetHeight - 50;
         setTimeout(() => {
           this.state = 'walk';
-          this.element.style.backgroundImage = `url('duck_${this.type}.png')`;
+          this.updateImage();
           this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
         }, 5000);
       }
@@ -124,24 +146,40 @@ class Duck {
 let ducks = [];
 
 function loadDucks() {
-  for (let i = 0; i < gameData.ducks; i++) {
-    const duck = new Duck(gameData.nextDuckId++);
-    ducks.push(duck);
-  }
+  // Восстановление уток из localStorage не реализовано (для простоты)
+  // Можно добавить позже при необходимости
 }
 
 function saveGame() {
   localStorage.setItem('duckIsle', JSON.stringify(gameData));
 }
 
-buyBtn.addEventListener('click', () => {
-  if (gameData.seeds >= 10) {
-    gameData.seeds -= 10;
-    const newDuck = new Duck(gameData.nextDuckId++);
-    ducks.push(newDuck);
-    gameData.nextDuckId++;
-    saveGame();
-    updateUI();
+function createDuck(type) {
+  const newDuck = new Duck(gameData.nextDuckId++, type);
+  ducks.push(newDuck);
+  gameData.ducks++;
+  saveGame();
+  updateUI();
+}
+
+buyNormalBtn.addEventListener('click', () => {
+  if (gameData.seeds >= 20) {
+    gameData.seeds -= 20;
+    createDuck('normal');
+  }
+});
+
+buyHatBtn.addEventListener('click', () => {
+  if (gameData.seeds >= 50) {
+    gameData.seeds -= 50;
+    createDuck('hat');
+  }
+});
+
+buySunglassesBtn.addEventListener('click', () => {
+  if (gameData.seeds >= 100) {
+    gameData.seeds -= 100;
+    createDuck('sunglasses');
   }
 });
 
@@ -174,16 +212,14 @@ function showQuackBubble(duckElement) {
   bubble.textContent = 'кря';
   const rect = duckElement.getBoundingClientRect();
   bubble.style.left = `${rect.left + rect.width / 2}px`;
-  bubble.style.top = `${rect.top - 40}px`;
+  bubble.style.top = `${rect.top - 30}px`;
   document.body.appendChild(bubble);
 
-  // Анимация
   setTimeout(() => {
     bubble.style.opacity = '1';
-    bubble.style.transform = 'translateY(-10px)';
+    bubble.style.transform = 'translateY(-8px)';
   }, 10);
 
-  // Скрываем через 1 секунду
   setTimeout(() => {
     bubble.style.opacity = '0';
     bubble.style.transform = 'translateY(0)';
@@ -194,5 +230,4 @@ function showQuackBubble(duckElement) {
 }
 
 // Запуск
-loadDucks();
 updateUI();
