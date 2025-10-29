@@ -28,7 +28,7 @@ class Duck {
     this.id = id;
     this.x = Math.random() * (pondEl.offsetWidth - 60);
     this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
-    this.state = 'walk';
+    this.state = 'walk'; // 'walk' или 'swim'
     this.workCount = 0;
     this.restUntil = 0;
     this.element = document.createElement('div');
@@ -36,6 +36,17 @@ class Duck {
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
+
+    // Выбираем тип утки (обычная, в шляпе, в очках)
+    const type = Math.random();
+    if (type < 0.33) {
+      this.type = 'normal';
+    } else if (type < 0.66) {
+      this.type = 'hat';
+    } else {
+      this.type = 'sunglasses';
+    }
+
     this.updatePosition();
   }
 
@@ -47,7 +58,7 @@ class Duck {
     }
 
     this.state = 'peck';
-    this.element.style.backgroundImage = "url('duck_pecking.png')";
+    this.element.style.backgroundImage = `url('duck_${this.type}_pecking.png')`;
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
     updateUI();
@@ -56,7 +67,7 @@ class Duck {
     showQuackBubble(this.element);
 
     setTimeout(() => {
-      this.element.style.backgroundImage = "url('duck_normal.png')";
+      this.element.style.backgroundImage = `url('duck_${this.type}.png')`;
       if (isAuto) {
         this.workCount++;
         this.state = 'walk';
@@ -93,6 +104,18 @@ class Duck {
       this.y += (Math.random() - 0.5) * 1.5;
       this.x = Math.max(10, Math.min(pondEl.offsetWidth - 60, this.x));
       this.y = Math.max(10, Math.min(pondEl.offsetHeight - 70, this.y));
+
+      // Если утка устала — уходит плавать
+      if (this.workCount >= 3) {
+        this.state = 'swim';
+        this.element.style.backgroundImage = `url('duck_${this.type}_swim.png')`;
+        this.y = pondEl.offsetHeight - 50; // Плавает на воде
+        setTimeout(() => {
+          this.state = 'walk';
+          this.element.style.backgroundImage = `url('duck_${this.type}.png')`;
+          this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
+        }, 5000);
+      }
     }
     this.updatePosition();
   }
