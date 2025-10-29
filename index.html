@@ -56,15 +56,6 @@
       z-index: 1;
     }
 
-    .ground {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 30%;
-      background: #2E4A3D;
-      z-index: 2;
-    }
-
     .duck {
       position: absolute;
       width: 60px;
@@ -80,11 +71,11 @@
       background: transparent;
       border: 2px solid #7DCEA0;
       color: #E0F7FA;
-      padding: 8px 16px;
-      margin-top: 12px;
+      padding: 6px 12px;
+      margin: 4px 4px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       transition: background 0.3s;
     }
 
@@ -107,10 +98,10 @@
       position: absolute;
       background: rgba(255, 255, 255, 0.9);
       color: #0F1A2C;
-      padding: 8px 16px;
-      border-radius: 12px;
+      padding: 6px 12px;
+      border-radius: 10px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 14px;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.3s, transform 0.3s;
@@ -121,12 +112,13 @@
 <body>
   <div id="ui">
     <div id="score">Зернышек: 0</div>
-    <button class="btn" id="buyDuck">Купить утку (10)</button>
+    <button class="btn" id="buyNormal">Утка (20)</button>
+    <button class="btn" id="buyHat">Утка в шляпе (50)</button>
+    <button class="btn" id="buySunglasses">Утка в очках (100)</button>
   </div>
-  <div id="duckCount">Уток: 1</div>
+  <div id="duckCount">Уток: 0</div>
   <div id="pond">
     <div class="water"></div>
-    <div class="ground"></div>
   </div>
 
   <script src="script.js"></script>
