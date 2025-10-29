@@ -118,6 +118,11 @@ class Duck {
 }
 
 function loadDucks(location) {
+  // Проверка: существует ли массив уток для этой локации
+  if (!locationDucks[location]) {
+    locationDucks[location] = []; // Инициализируем, если нет
+  }
+
   for (let i = 0; i < locationDucks[location].length; i++) {
     const duck = locationDucks[location][i];
     pondEl.appendChild(duck.element);
@@ -150,7 +155,13 @@ function updateBackground() {
   ducks.forEach(duck => duck.remove());
 
   // Загружаем уток для текущей локации
-  loadDucks(currentLoc);
+  if (locationDucks[currentLoc]) {
+    loadDucks(currentLoc);
+  } else {
+    console.log('Массив уток для локации', currentLoc, 'не инициализирован');
+  }
+
+  updateUI();
 }
 
 buyBtn.addEventListener('click', () => {
