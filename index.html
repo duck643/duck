@@ -48,19 +48,12 @@
     .water {
       width: 100%;
       height: 100%;
+      background: url('lake.png') no-repeat center center;
+      background-size: cover;
       position: absolute;
       top: 0;
       left: 0;
       z-index: 1;
-    }
-
-    .ground {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 30%;
-      background: #2E4A3D;
-      z-index: 2;
     }
 
     .duck {
@@ -90,26 +83,15 @@
       background: rgba(125, 206, 160, 0.15);
     }
 
-    .arrow {
+    #duckCount {
       position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 30px;
-      color: #E0F7FA;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px 20px;
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 10;
-      user-select: none;
-    }
-
-    .arrow-left {
-      left: 16px;
-    }
-
-    .arrow-right {
+      top: 16px;
       right: 16px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 18px;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
     }
 
     .quack-bubble {
@@ -132,13 +114,10 @@
     <div id="score">Зернышек: 0</div>
     <button class="btn" id="buyDuck">Купить утку (10)</button>
   </div>
+  <div id="duckCount">Уток: 1</div>
   <div id="pond">
     <div class="water"></div>
-    <div class="ground"></div>
-    <div class="arrow arrow-left">←</div>
-    <div class="arrow arrow-right">→</div>
   </div>
-  <div id="duckCount">Уток: 1</div>
 
   <script src="script.js"></script>
 </body>
