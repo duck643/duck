@@ -15,7 +15,6 @@ let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
 const pondEl = document.getElementById('pond');
 const scoreEl = document.getElementById('score');
 const buyBtn = document.getElementById('buyDuck');
-const grassEl = document.getElementById('grass');
 
 function updateUI() {
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
@@ -35,17 +34,6 @@ class Duck {
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
-
-    // Анимация ходьбы
-    this.walkAnimation = setInterval(() => {
-      if (this.state === 'walk') {
-        this.element.style.transform = 'scaleX(1)';
-        setTimeout(() => {
-          this.element.style.transform = 'scaleX(-1)';
-        }, 300);
-      }
-    }, 600);
-
     this.updatePosition();
   }
 
@@ -57,13 +45,13 @@ class Duck {
     }
 
     this.state = 'peck';
-    this.element.classList.add('pecking');
+    this.element.style.backgroundImage = "url('duck_pecking.png')";
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
     updateUI();
 
     setTimeout(() => {
-      this.element.classList.remove('pecking');
+      this.element.style.backgroundImage = "url('duck_normal.png')";
       if (isAuto) {
         this.workCount++;
         this.state = 'walk';
@@ -75,13 +63,11 @@ class Duck {
 
   rest() {
     this.state = 'rest';
-    this.element.textContent = '😴';
     this.workCount = 0;
     this.restUntil = Date.now() + 10000;
 
     setTimeout(() => {
       if (this.state === 'rest') {
-        this.element.textContent = '🦆';
         this.state = 'walk';
       }
     }, 10000);
@@ -94,7 +80,6 @@ class Duck {
 
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
-      this.element.textContent = '🦆';
       this.state = 'walk';
     }
 
@@ -149,20 +134,10 @@ setInterval(() => {
   });
 }, 10000);
 
-// Основной цикл
+// Основной цикл движения
 setInterval(() => {
   ducks.forEach(duck => duck.update());
 }, 100);
-
-// Генерация травы
-for (let i = 0; i < 15; i++) {
-  const blade = document.createElement('div');
-  blade.className = 'grass-blade';
-  blade.style.left = `${Math.random() * 100}%`;
-  blade.style.bottom = `${Math.random() * 10 + 5}px`;
-  blade.style.animationDelay = `${Math.random() * 3}s`;
-  grassEl.appendChild(blade);
-}
 
 // Запуск
 loadDucks();
