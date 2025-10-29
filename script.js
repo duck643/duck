@@ -7,7 +7,7 @@ if (tg) {
 
 // Загрузка или инициализация данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
-  seeds: 0,
+  seeds: 20,
   ducks: 1,          // уже есть 1 утка
   nextDuckId: 1
 };
