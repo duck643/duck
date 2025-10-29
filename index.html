@@ -36,6 +36,17 @@
       text-shadow: 0 0 6px rgba(125, 206, 160, 0.6);
     }
 
+    #duckCount {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 18px;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+    }
+
     #pond {
       width: 95vw;
       height: 70vh;
@@ -48,8 +59,6 @@
     .water {
       width: 100%;
       height: 100%;
-      background: url('lake_background.png') no-repeat center center;
-      background-size: cover;
       position: absolute;
       top: 0;
       left: 0;
@@ -91,6 +100,42 @@
     .btn:hover {
       background: rgba(125, 206, 160, 0.15);
     }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 30px;
+      color: #E0F7FA;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      user-select: none;
+    }
+
+    .arrow-left {
+      left: 16px;
+    }
+
+    .arrow-right {
+      right: 16px;
+    }
+
+    .quack-bubble {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.9);
+      color: #0F1A2C;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -101,7 +146,10 @@
   <div id="pond">
     <div class="water"></div>
     <div class="ground"></div>
+    <div class="arrow arrow-left">←</div>
+    <div class="arrow arrow-right">→</div>
   </div>
+  <div id="duckCount">Уток: 1</div>
 
   <script src="script.js"></script>
 </body>
