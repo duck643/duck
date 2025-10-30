@@ -7,31 +7,40 @@ if (tg) {
 
 // Загрузка или инициализация данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
-  seeds: 20,        // 20 зернышек при первом заходе
-  ducks: 1,         // уже есть 1 утка
-  nextDuckId: 1
+  seeds: 20,
+  feathers: 0,
+  ducks: 1,
+  nextDuckId: 1,
+  dailyExchangeCount: 0,
+  lastExchangeDay: new Date().toDateString(),
+  questStarted: false
 };
 
 let pondEl = null;
 let scoreEl = null;
+let feathersEl = null;
 let duckCountEl = null;
 let buyNormalBtn = null;
 let buyHatBtn = null;
 let buySunglassesBtn = null;
+let exchangeBtn = null;
+let questJournalBtn = null;
 
 function updateUI() {
-  if (!scoreEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn) return;
+  if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
+  feathersEl.textContent = `Перьев: ${gameData.feathers}`;
   duckCountEl.textContent = `Уток: ${ducks.length}`;
   buyNormalBtn.disabled = gameData.seeds < 20;
   buyHatBtn.disabled = gameData.seeds < 50;
   buySunglassesBtn.disabled = gameData.seeds < 100;
+  exchangeBtn.disabled = gameData.seeds < 150 || gameData.dailyExchangeCount >= 5;
 }
 
 class Duck {
   constructor(id, type) {
     this.id = id;
-    this.type = type; // 'normal', 'hat', 'sunglasses'
+    this.type = type;
     this.x = Math.random() * (pondEl.offsetWidth - 60);
     this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
     this.state = 'walk';
@@ -159,12 +168,15 @@ function createDuck(type) {
 function initGame() {
   pondEl = document.getElementById('pond');
   scoreEl = document.getElementById('score');
+  feathersEl = document.getElementById('feathers');
   duckCountEl = document.getElementById('duckCount');
   buyNormalBtn = document.getElementById('buyNormal');
   buyHatBtn = document.getElementById('buyHat');
   buySunglassesBtn = document.getElementById('buySunglasses');
+  exchangeBtn = document.getElementById('exchangeFeather');
+  questJournalBtn = document.getElementById('questJournal');
 
-  if (!pondEl || !scoreEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn) {
+  if (!pondEl || !scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn || !questJournalBtn) {
     setTimeout(initGame, 100);
     return;
   }
@@ -190,7 +202,45 @@ function initGame() {
     if (gameData.seeds >= 100) {
       gameData.seeds -= 100;
       createDuck('sunglasses');
+      if (!gameData.questStarted) {
+        gameData.questStarted = true;
+        saveGame();
+        alert("Вы заметили странное кровавое перо на берегу...");
+      }
     }
+  });
+
+  exchangeBtn.addEventListener('click', () => {
+    const today = new Date().toDateString();
+    if (gameData.lastExchangeDay !== today) {
+      gameData.dailyExchangeCount = 0;
+      gameData.lastExchangeDay = today;
+    }
+
+    if (gameData.dailyExchangeCount >= 5) {
+      alert("На сегодня вы обменяли максимальное количество Перьев. Завтра снова!");
+      return;
+    }
+
+    if (gameData.seeds >= 150) {
+      gameData.seeds -= 150;
+      gameData.feathers += 1;
+      gameData.dailyExchangeCount += 1;
+      saveGame();
+      updateUI();
+      alert("Обмен завершен! Теперь у вас есть Перо для особых решений!");
+    } else {
+      const need = 150 - gameData.seeds;
+      alert(`Недостаточно Зернышек. Накопите еще ${need} для обмена.`);
+    }
+  });
+
+  questJournalBtn.addEventListener('click', () => {
+    if (!gameData.questStarted) {
+      alert("Квест ещё не начат. Купите утку в очках!");
+      return;
+    }
+    alert("Досье:\n- Найдено кровавое перо\n- Встреча с /Люсией\n- Инспектор Гавриил ищет брата");
   });
 
   pondEl.addEventListener('click', (e) => {
