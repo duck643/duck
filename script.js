@@ -5,7 +5,7 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-// Загрузка или инициализация данных
+// Сохранение данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   seeds: 20,        // 20 зернышек при первом заходе
   ducks: 1,         // уже есть 1 утка
@@ -83,7 +83,7 @@ class Duck {
     }
 
     this.state = 'peck';
-    let img = 'duck_normal_pecking.png';
+    let img = 'duck_pecking.png';
     if (this.type === 'hat') img = 'duck_hat_pecking.png';
     if (this.type === 'sunglasses') img = 'duck_sunglasses_pecking.png';
     this.element.style.backgroundImage = `url('${img}')`;
@@ -91,12 +91,13 @@ class Duck {
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
     updateUI();
+
     showQuackBubble(this.element);
 
     setTimeout(() => {
       this.state = 'walk';
-      this.updateImage();
       this.startWalking();
+      this.updateImage();
       if (isAuto) this.workCount++;
     }, 300);
   }
@@ -109,8 +110,8 @@ class Duck {
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
-        this.updateImage();
         this.startWalking();
+        this.updateImage();
         if (this.workCount >= 3) {
           this.state = 'swim';
           this.stopWalking();
@@ -135,8 +136,8 @@ class Duck {
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
-      this.updateImage();
       this.startWalking();
+      this.updateImage();
     }
 
     if (this.state === 'walk') {
@@ -169,6 +170,7 @@ function loadInitialDuck() {
     const initialDuck = new Duck(0, 'normal');
     ducks.push(initialDuck);
     gameData.nextDuckId = 1;
+    saveGame();
   }
 }
 
@@ -235,4 +237,22 @@ function showQuackBubble(duckElement) {
   const rect = duckElement.getBoundingClientRect();
   bubble.style.left = `${rect.left + rect.width / 2}px`;
   bubble.style.top = `${rect.top - 30}px`;
-  document
+  document.body.appendChild(bubble);
+
+  setTimeout(() => {
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'translateY(-8px)';
+  }, 10);
+
+  setTimeout(() => {
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      document.body.removeChild(bubble);
+    }, 300);
+  }, 1000);
+}
+
+// Запуск
+loadInitialDuck();
+updateUI();
