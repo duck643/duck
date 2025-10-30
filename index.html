@@ -36,11 +36,6 @@
       text-shadow: 0 0 6px rgba(125, 206, 160, 0.6);
     }
 
-    #feathers {
-      font-size: 18px;
-      margin-top: 4px;
-    }
-
     #pond {
       width: 95vw;
       height: 70vh;
@@ -98,15 +93,6 @@
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
     }
 
-    #questJournal {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      font-size: 24px;
-      cursor: pointer;
-      z-index: 20;
-    }
-
     .quack-bubble {
       position: absolute;
       background: rgba(255, 255, 255, 0.9);
@@ -119,6 +105,62 @@
       opacity: 0;
       transition: opacity 0.3s, transform 0.3s;
       z-index: 100;
+    }
+
+    /* Стили для окна квеста */
+    #questModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+      background-color: #f9f9f9;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    #questJournalContent {
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+
+    .quest-task {
+      background: #e8f4fc;
+      padding: 10px;
+      margin: 10px 0;
+      border-left: 4px solid #007BFF;
+      border-radius: 4px;
+    }
+
+    .quest-done {
+      text-decoration: line-through;
+      color: #888;
     }
   </style>
 </head>
@@ -135,6 +177,17 @@
   <div id="questJournal">📁</div>
   <div id="pond">
     <div class="water"></div>
+  </div>
+
+  <!-- Модальное окно Квеста -->
+  <div id="questModal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Досье: Тени Забвения на Утином Озере</h2>
+      <div id="questJournalContent">
+        <!-- Сюда будет загружаться контент -->
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
