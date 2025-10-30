@@ -13,7 +13,12 @@ let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   nextDuckId: 1,
   dailyExchangeCount: 0,
   lastExchangeDay: new Date().toDateString(),
-  questStarted: false
+  questStarted: false,
+  metLucia: false,
+  talkedToGavriil: false,
+  talkedToVivien: false,
+  talkedToDario: false,
+  talkedToElian: false
 };
 
 let pondEl = null;
@@ -25,6 +30,9 @@ let buyHatBtn = null;
 let buySunglassesBtn = null;
 let exchangeBtn = null;
 let questJournalBtn = null;
+let questModal = null;
+let closeModal = null;
+let questJournalContent = null;
 
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
@@ -33,7 +41,10 @@ function updateUI() {
   duckCountEl.textContent = `Уток: ${ducks.length}`;
   buyNormalBtn.disabled = gameData.seeds < 20;
   buyHatBtn.disabled = gameData.seeds < 50;
-  buySunglassesBtn.disabled = gameData.seeds < 100;
+  // Условие: утки в очках можно купить только если есть 5 обычных и 5 в шляпе
+  const normalDucks = ducks.filter(d => d.type === 'normal').length;
+  const hatDucks = ducks.filter(d => d.type === 'hat').length;
+  buySunglassesBtn.disabled = gameData.seeds < 100 || normalDucks < 5 || hatDucks < 5;
   exchangeBtn.disabled = gameData.seeds < 150 || gameData.dailyExchangeCount >= 5;
 }
 
@@ -51,6 +62,8 @@ class Duck {
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
+    this.walkFrame = 0;
+    this.walkTimer = null;
     this.updateImage();
   }
 
@@ -62,8 +75,24 @@ class Duck {
       if (this.type === 'normal') img = 'duck_swim.png';
       if (this.type === 'hat') img = 'duck_hat_swim.png';
       if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
+    } else if (this.state === 'walk' && this.walkFrame === 1) {
+      img = img.replace('.png', '_walk.png');
     }
     this.element.style.backgroundImage = `url('${img}')`;
+  }
+
+  startWalking() {
+    this.walkTimer = setInterval(() => {
+      this.walkFrame = (this.walkFrame + 1) % 2;
+      this.updateImage();
+    }, 800); // Медленная анимация, 0.8 секунды
+  }
+
+  stopWalking() {
+    if (this.walkTimer) {
+      clearInterval(this.walkTimer);
+      this.walkTimer = null;
+    }
   }
 
   peck(isAuto = false) {
@@ -85,8 +114,10 @@ class Duck {
 
     showQuackBubble(this.element);
 
+    // Исправление: гарантированно возвращаемся в состояние 'walk'
     setTimeout(() => {
       this.state = 'walk';
+      this.startWalking();
       this.updateImage();
       if (isAuto) this.workCount++;
     }, 300);
@@ -100,13 +131,16 @@ class Duck {
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
+        this.startWalking();
         this.updateImage();
         if (this.workCount >= 3) {
           this.state = 'swim';
+          this.stopWalking();
           this.updateImage();
           this.y = pondEl.offsetHeight - 50;
           setTimeout(() => {
             this.state = 'walk';
+            this.startWalking();
             this.updateImage();
             this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
           }, 5000);
@@ -123,16 +157,24 @@ class Duck {
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
+      this.startWalking();
       this.updateImage();
     }
 
     if (this.state === 'walk') {
+      this.x += (Math.random() - 0.5) * 3;
+      this.y += (Math.random() - 0.5) * 1.5;
+      this.x = Math.max(10, Math.min(pondEl.offsetWidth - 60, this.x));
+      this.y = Math.max(10, Math.min(pondEl.offsetHeight - 70, this.y));
+
       if (this.workCount >= 3) {
         this.state = 'swim';
+        this.stopWalking();
         this.updateImage();
         this.y = pondEl.offsetHeight - 50;
         setTimeout(() => {
           this.state = 'walk';
+          this.startWalking();
           this.updateImage();
           this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
         }, 5000);
@@ -176,6 +218,11 @@ function initGame() {
   exchangeBtn = document.getElementById('exchangeFeather');
   questJournalBtn = document.getElementById('questJournal');
 
+  // Элементы модального окна
+  questModal = document.getElementById('questModal');
+  closeModal = document.querySelector('.close');
+  questJournalContent = document.getElementById('questJournalContent');
+
   if (!pondEl || !scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn || !questJournalBtn) {
     setTimeout(initGame, 100);
     return;
@@ -199,7 +246,9 @@ function initGame() {
   });
 
   buySunglassesBtn.addEventListener('click', () => {
-    if (gameData.seeds >= 100) {
+    const normalDucks = ducks.filter(d => d.type === 'normal').length;
+    const hatDucks = ducks.filter(d => d.type === 'hat').length;
+    if (gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5) {
       gameData.seeds -= 100;
       createDuck('sunglasses');
       if (!gameData.questStarted) {
@@ -207,6 +256,12 @@ function initGame() {
         saveGame();
         alert("Вы заметили странное кровавое перо на берегу...");
       }
+    } else {
+      let message = "Недостаточно зернышек или уток.\n";
+      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).\n`;
+      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks}).\n`;
+      if (hatDucks < 5) message += `- Нужно 5 уток в шляпе (у вас ${hatDucks}).`;
+      alert(message);
     }
   });
 
@@ -240,7 +295,8 @@ function initGame() {
       alert("Квест ещё не начат. Купите утку в очках!");
       return;
     }
-    alert("Досье:\n- Найдено кровавое перо\n- Встреча с /Люсией\n- Инспектор Гавриил ищет брата");
+    loadQuestJournal();
+    questModal.style.display = "block";
   });
 
   pondEl.addEventListener('click', (e) => {
@@ -263,6 +319,62 @@ function initGame() {
     ducks.forEach(duck => duck.update());
   }, 100);
 
+  // Обработчики для модального окна квеста
+  closeModal.addEventListener('click', () => {
+    questModal.style.display = "none";
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target == questModal) {
+      questModal.style.display = "none";
+    }
+  });
+
+  function loadQuestJournal() {
+    let content = `
+      <p><strong>Досье:</strong></p>
+      <div class="quest-task">- Найдено кровавое перо</div>
+    `;
+
+    // Проверяем, была ли встреча с Люсией
+    if (gameData.metLucia) {
+      content += `<div class="quest-task quest-done">- Встреча с /Люсией</div>`;
+    } else {
+      content += `<div class="quest-task">- Встреча с /Люсией</div>`;
+    }
+
+    // Проверяем, был ли диалог с Гавриилом
+    if (gameData.talkedToGavriil) {
+      content += `<div class="quest-task quest-done">- Диалог с Инспектором Гавриилом</div>`;
+    } else {
+      content += `<div class="quest-task">- Диалог с Инспектором Гавриилом</div>`;
+    }
+
+    // Проверяем, был ли диалог с Вивьен
+    if (gameData.talkedToVivien) {
+      content += `<div class="quest-task quest-done">- Знакомство с Вивьен</div>`;
+    } else {
+      content += `<div class="quest-task">- Знакомство с Вивьен</div>`;
+    }
+
+    // Проверяем, был ли диалог с Дарио
+    if (gameData.talkedToDario) {
+      content += `<div class="quest-task quest-done">- Встреча с Дарио</div>`;
+    } else {
+      content += `<div class="quest-task">- Встреча с Дарио</div>`;
+    }
+
+    // Проверяем, был ли диалог с Элианом
+    if (gameData.talkedToElian) {
+      content += `<div class="quest-task quest-done">- Знакомство с Элианом</div>`;
+    } else {
+      content += `<div class="quest-task">- Знакомство с Элианом</div>`;
+    }
+
+    questJournalContent.innerHTML = content;
+  }
+
+  // Всплывающее облако "кря"
   function showQuackBubble(duckElement) {
     if (!duckElement || !duckElement.getBoundingClientRect) return;
     const rect = duckElement.getBoundingClientRect();
