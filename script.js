@@ -5,22 +5,22 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-// Сохранение данных
+// Загрузка или инициализация данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   seeds: 20,        // 20 зернышек при первом заходе
   ducks: 1,         // уже есть 1 утка
   nextDuckId: 1
 };
 
-const pondEl = document.getElementById('pond');
-const scoreEl = document.getElementById('score');
-const duckCountEl = document.getElementById('duckCount');
-
-const buyNormalBtn = document.getElementById('buyNormal');
-const buyHatBtn = document.getElementById('buyHat');
-const buySunglassesBtn = document.getElementById('buySunglasses');
+let pondEl = null;
+let scoreEl = null;
+let duckCountEl = null;
+let buyNormalBtn = null;
+let buyHatBtn = null;
+let buySunglassesBtn = null;
 
 function updateUI() {
+  if (!scoreEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn) return;
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
   duckCountEl.textContent = `Уток: ${ducks.length}`;
   buyNormalBtn.disabled = gameData.seeds < 20;
@@ -186,73 +186,91 @@ function createDuck(type) {
   updateUI();
 }
 
-buyNormalBtn.addEventListener('click', () => {
-  if (gameData.seeds >= 20) {
-    gameData.seeds -= 20;
-    createDuck('normal');
-  }
-});
+function initGame() {
+  pondEl = document.getElementById('pond');
+  scoreEl = document.getElementById('score');
+  duckCountEl = document.getElementById('duckCount');
+  buyNormalBtn = document.getElementById('buyNormal');
+  buyHatBtn = document.getElementById('buyHat');
+  buySunglassesBtn = document.getElementById('buySunglasses');
 
-buyHatBtn.addEventListener('click', () => {
-  if (gameData.seeds >= 50) {
-    gameData.seeds -= 50;
-    createDuck('hat');
+  if (!pondEl || !scoreEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn) {
+    console.log('Элементы ещё не загружены. Повторю через 100мс.');
+    setTimeout(initGame, 100);
+    return;
   }
-});
 
-buySunglassesBtn.addEventListener('click', () => {
-  if (gameData.seeds >= 100) {
-    gameData.seeds -= 100;
-    createDuck('sunglasses');
-  }
-});
+  // Теперь все элементы доступны — можно начинать
+  loadInitialDuck();
+  updateUI();
 
-pondEl.addEventListener('click', (e) => {
-  const clickedDuck = e.target.closest('.duck');
-  if (clickedDuck) {
-    const duck = ducks.find(d => d.element === clickedDuck);
-    if (duck) duck.peck(false);
-  }
-});
-
-// Автоматическая работа
-setInterval(() => {
-  ducks.forEach(duck => {
-    if (duck.state !== 'rest' && Math.random() < 0.2) {
-      duck.peck(true);
+  buyNormalBtn.addEventListener('click', () => {
+    if (gameData.seeds >= 20) {
+      gameData.seeds -= 20;
+      createDuck('normal');
     }
   });
-}, 10000);
 
-// Основной цикл движения
-setInterval(() => {
-  ducks.forEach(duck => duck.update());
-}, 100);
+  buyHatBtn.addEventListener('click', () => {
+    if (gameData.seeds >= 50) {
+      gameData.seeds -= 50;
+      createDuck('hat');
+    }
+  });
 
-// Всплывающее облако "кря"
-function showQuackBubble(duckElement) {
-  const bubble = document.createElement('div');
-  bubble.className = 'quack-bubble';
-  bubble.textContent = 'кря';
-  const rect = duckElement.getBoundingClientRect();
-  bubble.style.left = `${rect.left + rect.width / 2}px`;
-  bubble.style.top = `${rect.top - 30}px`;
-  document.body.appendChild(bubble);
+  buySunglassesBtn.addEventListener('click', () => {
+    if (gameData.seeds >= 100) {
+      gameData.seeds -= 100;
+      createDuck('sunglasses');
+    }
+  });
 
-  setTimeout(() => {
-    bubble.style.opacity = '1';
-    bubble.style.transform = 'translateY(-8px)';
-  }, 10);
+  pondEl.addEventListener('click', (e) => {
+    const clickedDuck = e.target.closest('.duck');
+    if (clickedDuck) {
+      const duck = ducks.find(d => d.element === clickedDuck);
+      if (duck) duck.peck(false);
+    }
+  });
 
-  setTimeout(() => {
-    bubble.style.opacity = '0';
-    bubble.style.transform = 'translateY(0)';
+  // Автоматическая работа
+  setInterval(() => {
+    ducks.forEach(duck => {
+      if (duck.state !== 'rest' && Math.random() < 0.2) {
+        duck.peck(true);
+      }
+    });
+  }, 10000);
+
+  // Основной цикл движения
+  setInterval(() => {
+    ducks.forEach(duck => duck.update());
+  }, 100);
+
+  // Всплывающее облако "кря"
+  function showQuackBubble(duckElement) {
+    const bubble = document.createElement('div');
+    bubble.className = 'quack-bubble';
+    bubble.textContent = 'кря';
+    const rect = duckElement.getBoundingClientRect();
+    bubble.style.left = `${rect.left + rect.width / 2}px`;
+    bubble.style.top = `${rect.top - 30}px`;
+    document.body.appendChild(bubble);
+
     setTimeout(() => {
-      document.body.removeChild(bubble);
-    }, 300);
-  }, 1000);
+      bubble.style.opacity = '1';
+      bubble.style.transform = 'translateY(-8px)';
+    }, 10);
+
+    setTimeout(() => {
+      bubble.style.opacity = '0';
+      bubble.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        document.body.removeChild(bubble);
+      }, 300);
+    }, 1000);
+  }
 }
 
-// Запуск
-loadInitialDuck();
-updateUI();
+// Запуск игры только после полной загрузки DOM
+document.addEventListener('DOMContentLoaded', initGame);
