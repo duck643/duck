@@ -65,7 +65,7 @@ class Duck {
     this.walkTimer = setInterval(() => {
       this.walkFrame = (this.walkFrame + 1) % 2;
       this.updateImage();
-    }, 200); // Меняем кадр каждые 200 мс
+    }, 200);
   }
 
   stopWalking() {
@@ -246,34 +246,34 @@ function initGame() {
   setInterval(() => {
     ducks.forEach(duck => duck.update());
   }, 100);
-
-  // Всплывающее облако "кря"
-  function showQuackBubble(duckElement) {
-    if (!duckElement || !duckElement.getBoundingClientRect) return;
-    const rect = duckElement.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-
-    const bubble = document.createElement('div');
-    bubble.className = 'quack-bubble';
-    bubble.textContent = 'кря';
-    bubble.style.left = `${rect.left + rect.width / 2}px`;
-    bubble.style.top = `${rect.top - 30}px`;
-    document.body.appendChild(bubble);
-
-    setTimeout(() => {
-      bubble.style.opacity = '1';
-      bubble.style.transform = 'translateY(-8px)';
-    }, 10);
-
-    setTimeout(() => {
-      bubble.style.opacity = '0';
-      bubble.style.transform = 'translateY(0)';
-      setTimeout(() => {
-        if (bubble.parentNode) document.body.removeChild(bubble);
-      }, 300);
-    }, 1000);
-  }
 }
 
-// Запуск игры только после полной загрузки DOM
+// Всплывающее облако "кря"
+function showQuackBubble(duckElement) {
+  if (!duckElement || !duckElement.getBoundingClientRect) return;
+  const rect = duckElement.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'quack-bubble';
+  bubble.textContent = 'кря';
+  bubble.style.left = `${rect.left + rect.width / 2}px`;
+  bubble.style.top = `${rect.top - 30}px`;
+  document.body.appendChild(bubble);
+
+  setTimeout(() => {
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'translateY(-8px)';
+  }, 10);
+
+  setTimeout(() => {
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      if (bubble.parentNode) document.body.removeChild(bubble);
+    }, 300);
+  }, 1000);
+}
+
+// Запуск игры после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', initGame);
