@@ -14,12 +14,26 @@ let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   dailyExchangeCount: 0,
   lastExchangeDay: new Date().toDateString(),
   questStarted: false,
-  metLucia: false,
-  talkedToGavriil: false,
-  talkedToVivien: false,
-  talkedToDario: false,
-  talkedToElian: false,
-  foundBloodyFeather: false
+  
+  // Система квеста
+  questProgress: {
+    episode: 0,
+    trustGavriil: 0,
+    truthMeter: 0,
+    trustLucia: 0,
+    suspicionGavriil: 0,
+    relationshipDario: 0,
+    relationshipElian: 0,
+    foundFeather: false,
+    metLucia: false,
+    talkedToGavriil: false,
+    talkedToVivien: false,
+    talkedToDario: false,
+    talkedToElian: false,
+    playerChoices: [],
+    hasOperaTicket: false,
+    hasTornNote: false
+  }
 };
 
 let pondEl = null;
@@ -34,6 +48,14 @@ let questJournalBtn = null;
 let questModal = null;
 let closeModal = null;
 let questJournalContent = null;
+
+// NPC элементы
+let luciaNPC = null;
+let gavriilNPC = null;
+let vivienNPC = null;
+let darioNPC = null;
+let elianNPC = null;
+let bloodyFeather = null;
 
 // Всплывающее облако "кря"
 function showQuackBubble(duckElement) {
@@ -64,57 +86,482 @@ function showQuackBubble(duckElement) {
 
 // Функция для показа кровавого пера
 function showBloodyFeather() {
-  if (gameData.foundBloodyFeather) return;
+  if (gameData.questProgress.foundFeather) return;
   
-  const feather = document.createElement('div');
-  feather.className = 'bloody-feather';
-  feather.style.position = 'absolute';
-  feather.style.bottom = '20px';
-  feather.style.right = '20px';
-  feather.style.width = '40px';
-  feather.style.height = '60px';
-  feather.style.backgroundImage = "url('feather.png')";
-  feather.style.backgroundSize = 'contain';
-  feather.style.backgroundRepeat = 'no-repeat';
-  feather.style.zIndex = '10';
-  feather.style.cursor = 'pointer';
-  feather.title = 'Странное кровавое перо...';
+  bloodyFeather = document.createElement('div');
+  bloodyFeather.className = 'bloody-feather quest-item';
+  bloodyFeather.style.position = 'absolute';
+  bloodyFeather.style.bottom = '100px';
+  bloodyFeather.style.right = '50px';
+  bloodyFeather.style.width = '40px';
+  bloodyFeather.style.height = '60px';
+  bloodyFeather.style.backgroundImage = "url('feather.png')";
+  bloodyFeather.style.backgroundSize = 'contain';
+  bloodyFeather.style.backgroundRepeat = 'no-repeat';
+  bloodyFeather.style.zIndex = '10';
+  bloodyFeather.style.cursor = 'pointer';
+  bloodyFeather.title = 'Странное кровавое перо...';
   
-  feather.addEventListener('click', () => {
-    alert("Вы нашли кровавое перо! Кажется, это начало чего-то таинственного...");
-    feather.style.display = 'none';
-    gameData.foundBloodyFeather = true;
-    saveGame();
+  bloodyFeather.addEventListener('click', () => {
+    startEpisode1Scene1();
   });
   
-  pondEl.appendChild(feather);
-  gameData.foundBloodyFeather = true;
+  pondEl.appendChild(bloodyFeather);
+  gameData.questProgress.foundFeather = true;
   saveGame();
 }
 
-// Функция для создания утки-почтальона
-function createPostmanDuck() {
-  const postmanDuck = document.createElement('div');
-  postmanDuck.className = 'duck postman-duck';
-  postmanDuck.style.position = 'absolute';
-  postmanDuck.style.bottom = '10px';
-  postmanDuck.style.left = '10px';
-  postmanDuck.style.width = '60px';
-  postmanDuck.style.height = '70px';
-  postmanDuck.style.backgroundImage = "url('duck_postman.png')";
-  postmanDuck.style.backgroundSize = 'contain';
-  postmanDuck.style.backgroundRepeat = 'no-repeat';
-  postmanDuck.style.zIndex = '15';
-  postmanDuck.style.cursor = 'pointer';
-  postmanDuck.title = 'Утка-почтальон';
+// Создание NPC
+function createNPC(type, position) {
+  const npc = document.createElement('div');
+  npc.className = `npc npc-${type}`;
+  npc.style.position = 'absolute';
+  npc.style.width = '60px';
+  npc.style.height = '70px';
+  npc.style.backgroundImage = `url('duck_${type}.png')`;
+  npc.style.backgroundSize = 'contain';
+  npc.style.backgroundRepeat = 'no-repeat';
+  npc.style.zIndex = '15';
+  npc.style.cursor = 'pointer';
   
-  postmanDuck.addEventListener('click', () => {
-    alert("Привет! Я утка-почтальон. У меня есть сообщение для тебя! Кажется, это кровавое перо связано со старыми легендами этого озера.");
-  });
+  // Позиционирование
+  switch(position) {
+    case 'left': 
+      npc.style.left = '20px';
+      npc.style.bottom = '80px';
+      break;
+    case 'right':
+      npc.style.right = '20px';
+      npc.style.bottom = '80px';
+      break;
+    case 'top':
+      npc.style.left = '50%';
+      npc.style.top = '50px';
+      break;
+    case 'center':
+      npc.style.left = '40%';
+      npc.style.bottom = '100px';
+      break;
+  }
   
-  pondEl.appendChild(postmanDuck);
+  pondEl.appendChild(npc);
+  return npc;
 }
 
+// Система диалогов
+function showDialog(title, message, choices, onChoiceSelect) {
+  const dialog = document.createElement('div');
+  dialog.className = 'dialog-overlay';
+  dialog.innerHTML = `
+    <div class="dialog-content">
+      <h3>${title}</h3>
+      <div class="dialog-message">${message}</div>
+      <div class="dialog-choices">
+        ${choices.map((choice, index) => 
+          `<button class="dialog-choice" data-index="${index}">${choice.text}</button>`
+        ).join('')}
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(dialog);
+  
+  // Обработчики выбора
+  dialog.querySelectorAll('.dialog-choice').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const choiceIndex = parseInt(e.target.dataset.index);
+      const choice = choices[choiceIndex];
+      
+      // Применяем эффекты выбора
+      if (choice.effects) {
+        Object.keys(choice.effects).forEach(stat => {
+          gameData.questProgress[stat] += choice.effects[stat];
+        });
+      }
+      
+      gameData.questProgress.playerChoices.push({
+        episode: gameData.questProgress.episode,
+        choice: choice.text,
+        effects: choice.effects
+      });
+      
+      saveGame();
+      document.body.removeChild(dialog);
+      
+      if (onChoiceSelect) {
+        onChoiceSelect(choiceIndex, choice);
+      }
+    });
+  });
+}
+
+// ЭПИЗОД 1: КРОВАВОЕ ПЕРО
+function startEpisode1Scene1() {
+  gameData.questProgress.episode = 1;
+  
+  showDialog(
+    "Таинственная находка",
+    "Что это? Краска?.. Нет, похоже на кровь. Перо неестественно красное и пульсирует слабым светом.",
+    [
+      {
+        text: "Взять перо и осмотреть",
+        effects: { truthMeter: 5 }
+      },
+      {
+        text: "Отойти подальше, выглядит опасно",
+        effects: { suspicionGavriil: 5 }
+      },
+      {
+        text: "Спрятать перо в карман",
+        effects: { trustLucia: 5 }
+      }
+    ],
+    (choiceIndex, choice) => {
+      // После выбора появляется почтальон
+      setTimeout(() => {
+        createPostmanDuck();
+        startEpisode1Scene2();
+      }, 1000);
+    }
+  );
+}
+
+function startEpisode1Scene2() {
+  showDialog(
+    "Утка-Почтальон",
+    "О нет-нет-нет! Вы не должны были этого находить! Спрячьте! Быстро!",
+    [
+      {
+        text: "Что происходит? Чье это перо?",
+        effects: { trustLucia: 10 }
+      },
+      {
+        text: "Я не хочу проблем. Убирайтесь!",
+        effects: { suspicionGavriil: 10 }
+      },
+      {
+        text: "Расскажите всё, что знаете",
+        effects: { truthMeter: 10, seeds: -50 }
+      }
+    ],
+    (choiceIndex, choice) => {
+      if (choiceIndex === 2 && gameData.seeds >= 50) {
+        gameData.seeds -= 50;
+        updateUI();
+      }
+      
+      // Переход к встрече с Люсией
+      setTimeout(() => {
+        createLuciaNPC();
+        startEpisode1Scene3();
+      }, 1500);
+    }
+  );
+}
+
+function startEpisode1Scene3() {
+  gameData.questProgress.metLucia = true;
+  
+  showDialog(
+    "Люсия",
+    "Кто вы? Я... я не помню. Только тень... и крики...",
+    [
+      {
+        text: "Успокойтесь, я здесь чтобы помочь",
+        effects: { trustLucia: 10 }
+      },
+      {
+        text: "Что вы помните о той ночи?",
+        effects: { truthMeter: -5 }
+      },
+      {
+        text: "Взгляните на это перо...",
+        effects: { truthMeter: 15 },
+        requirement: () => gameData.questProgress.foundFeather
+      }
+    ],
+    (choiceIndex, choice) => {
+      // Переход ко 2 эпизоду
+      setTimeout(() => {
+        createGavriilNPC();
+        startEpisode2Scene1();
+      }, 2000);
+    }
+  );
+}
+
+// ЭПИЗОД 2: ДОПРОС У ИНСПЕКТОРА
+function startEpisode2Scene1() {
+  gameData.questProgress.episode = 2;
+  gameData.questProgress.talkedToGavriil = true;
+  
+  showDialog(
+    "Инспектор Гавриил",
+    "Люсия! Фамильное перо моего рода исчезло вместе с моим братом! Все улики указывают на тебя!",
+    [
+      {
+        text: "Я ничего не помню! Отстаньте!",
+        effects: { suspicionGavriil: 10 }
+      },
+      {
+        text: "Я видел/а тень... и крик...",
+        effects: { trustGavriil: 5 }
+      },
+      {
+        text: "Дайте мне время, я всё вспомню",
+        effects: { trustGavriil: 10, feathers: -2 },
+        requirement: () => gameData.feathers >= 2
+      }
+    ],
+    (choiceIndex, choice) => {
+      if (choiceIndex === 2 && gameData.feathers >= 2) {
+        gameData.feathers -= 2;
+        updateUI();
+      }
+      
+      // Переход к 3 эпизоду
+      setTimeout(() => {
+        createVivienNPC();
+        startEpisode3Scene1();
+      }, 2000);
+    }
+  );
+}
+
+// ЭПИЗОД 3: НЕНАДЕЖНЫЕ СОЮЗНИКИ
+function startEpisode3Scene1() {
+  gameData.questProgress.episode = 3;
+  gameData.questProgress.talkedToVivien = true;
+  
+  showDialog(
+    "Вивьен",
+    "Милый/милая, не мучай себя воспоминаниями. Некоторые вещи лучше забыть.",
+    [
+      {
+        text: "Вы что-то скрываете, Вивьен?",
+        effects: { truthMeter: 10 },
+        requirement: () => gameData.questProgress.trustGavriil >= 5
+      },
+      {
+        text: "Может, вы помните что-то о той ночи?",
+        effects: { truthMeter: -5 }
+      },
+      {
+        text: "Спасибо за заботу",
+        effects: { trustLucia: 5 }
+      }
+    ],
+    (choiceIndex, choice) => {
+      // Переход к Дарио
+      setTimeout(() => {
+        createDarioNPC();
+        startEpisode3Scene2();
+      }, 2000);
+    }
+  );
+}
+
+function startEpisode3Scene2() {
+  gameData.questProgress.talkedToDario = true;
+  
+  showDialog(
+    "Дарио",
+    "Притворяешься, что не помнишь? Как удобно! Забыл/а и наши 'делишки'?",
+    [
+      {
+        text: "Какие делишки? Мы расстались!",
+        effects: { relationshipDario: -10 }
+      },
+      {
+        text: "Прости меня, я был/а не в себе",
+        effects: { relationshipDario: 10 }
+      },
+      {
+        text: "Это ты подставил/а меня!",
+        effects: { truthMeter: 15 },
+        requirement: () => gameData.questProgress.hasTornNote
+      }
+    ],
+    (choiceIndex, choice) => {
+      // Переход к 4 эпизоду
+      setTimeout(() => {
+        createElianNPC();
+        startEpisode4Scene1();
+      }, 2000);
+    }
+  );
+}
+
+// ЭПИЗОД 4: ТАЙНЫЙ УХАЖЕР
+function startEpisode4Scene1() {
+  gameData.questProgress.episode = 4;
+  gameData.questProgress.talkedToElian = true;
+  
+  showDialog(
+    "Элиан",
+    "Люсия... Я слышал, ты вернулся/вернулась. Как ты?",
+    [
+      {
+        text: "Мы знакомы?",
+        effects: { relationshipElian: 0 }
+      },
+      {
+        text: "Ваше лицо кажется знакомым",
+        effects: { relationshipElian: 10 }
+      },
+      {
+        text: "Отстаньте! Все 'друзья' мне только вредят!",
+        effects: { relationshipElian: -5 }
+      }
+    ],
+    (choiceIndex, choice) => {
+      // Переход к финальным выборам
+      setTimeout(() => {
+        startFinalChoices();
+      }, 2000);
+    }
+  );
+}
+
+// ФИНАЛЬНЫЕ ВЫБОРЫ
+function startFinalChoices() {
+  const canDiscoverTruth = gameData.questProgress.truthMeter >= 70;
+  const hasHighTrust = gameData.questProgress.trustGavriil >= 50;
+  
+  showDialog(
+    "Момент истины",
+    "Все собрались вокруг. Перо пульсирует кровавым светом. Пришло время сделать окончательный выбор." +
+    (canDiscoverTruth ? "\n\nВы собрали достаточно улик чтобы узнать правду!" : "\n\nВам не хватает информации для полной картины."),
+    [
+      {
+        text: "Использовать силу пера чтобы восстановить память",
+        effects: { truthMeter: 20 },
+        requirement: () => canDiscoverTruth
+      },
+      {
+        text: "Уничтожить перо и забыть всё",
+        effects: { suspicionGavriil: -50 }
+      },
+      {
+        text: "Отдать перо Гавриилу и довериться правосудию",
+        effects: { trustGavriil: 30 },
+        requirement: () => hasHighTrust
+      },
+      {
+        text: "Сбежать с пером и начать новую жизнь",
+        effects: { relationshipDario: 20, relationshipElian: -20 }
+      }
+    ],
+    (choiceIndex, choice) => {
+      // Финальная сцена
+      setTimeout(() => {
+        showFinalScene(choiceIndex);
+      }, 1000);
+    }
+  );
+}
+
+function showFinalScene(choiceIndex) {
+  const endings = [
+    {
+      title: "ИСТИНА ОТКРЫТА",
+      message: "Вы восстановили память Люсии. Оказалось, она была свидетелем несчастного случая. Гавриил прощает её, и правда восторжествовала."
+    },
+    {
+      title: "ЗАБВЕНИЕ", 
+      message: "Перо уничтожено. Люсия продолжает жить без воспоминаний, но и без преследований. Иногда лучше не знать правды."
+    },
+    {
+      title: "ПРАВОСУДИЕ",
+      message: "Гавриил, тронутый вашим доверием, находит настоящего виновника. Справедливость восстановлена."
+    },
+    {
+      title: "НОВАЯ ЖИЗНЬ",
+      message: "Вы и Люсия начинаете всё заново вдали от озера. Правда осталась там, в прошлом."
+    }
+  ];
+  
+  const ending = endings[choiceIndex] || endings[0];
+  
+  showDialog(
+    ending.title,
+    ending.message + "\n\nКвест завершен!",
+    [
+      { text: "Вернуться к озеру" }
+    ],
+    () => {
+      // Завершение квеста
+      gameData.questProgress.episode = 999; // Завершен
+      saveGame();
+    }
+  );
+}
+
+// Создание NPC персонажей
+function createPostmanDuck() {
+  const postman = createNPC('postman', 'left');
+  postman.title = 'Утка-почтальон';
+  postman.addEventListener('click', () => {
+    showDialog("Утка-почтальон", "Будьте осторожны... Некоторые тайны лучше остаются тайнами.", [
+      { text: "Спасибо за предупреждение" }
+    ]);
+  });
+}
+
+function createLuciaNPC() {
+  luciaNPC = createNPC('normal', 'center');
+  luciaNPC.title = 'Люсия';
+  luciaNPC.style.filter = 'brightness(0.7)';
+  luciaNPC.addEventListener('click', () => {
+    showDialog("Люсия", "Я всё ещё ничего не помню... Помогите мне...", [
+      { text: "Мы во всём разберемся" }
+    ]);
+  });
+}
+
+function createGavriilNPC() {
+  gavriilNPC = createNPC('hat', 'right');
+  gavriilNPC.title = 'Инспектор Гавриил';
+  gavriilNPC.addEventListener('click', () => {
+    showDialog("Инспектор Гавриил", "Расследование продолжается. Надеюсь, вы на правильной стороне.", [
+      { text: "Я на стороне правды" }
+    ]);
+  });
+}
+
+function createVivienNPC() {
+  vivienNPC = createNPC('sunglasses', 'top');
+  vivienNPC.title = 'Вивьен';
+  vivienNPC.addEventListener('click', () => {
+    showDialog("Вивьен", "Иногда незнание - благо, дорогой/дорогая.", [
+      { text: "Я предпочитаю знать правду" }
+    ]);
+  });
+}
+
+function createDarioNPC() {
+  darioNPC = createNPC('normal', 'left');
+  darioNPC.title = 'Дарио';
+  darioNPC.style.transform = 'scaleX(-1)';
+  darioNPC.addEventListener('click', () => {
+    showDialog("Дарио", "Не доверяй никому. Особенно тем, кто предлагает помощь.", [
+      { text: "Я буду осторожен" }
+    ]);
+  });
+}
+
+function createElianNPC() {
+  elianNPC = createNPC('hat', 'right');
+  elianNPC.title = 'Элиан';
+  elianNPC.style.filter = 'sepia(0.5)';
+  elianNPC.addEventListener('click', () => {
+    showDialog("Элиан", "Прошлое должно остаться в прошлом. Иногда это единственный путь вперёд.", [
+      { text: "Но правда важна" }
+    ]);
+  });
+}
+
+// Остальные функции игры остаются без изменений
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
   
@@ -125,14 +572,12 @@ function updateUI() {
   buyNormalBtn.disabled = gameData.seeds < 20;
   buyHatBtn.disabled = gameData.seeds < 50;
   
-  // Условие: утки в очках можно купить только если есть 5 обычных и 5 в шляпе
   const normalDucks = ducks.filter(d => d.type === 'normal').length;
   const hatDucks = ducks.filter(d => d.type === 'hat').length;
   const canBuySunglasses = gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5;
   
   buySunglassesBtn.disabled = !canBuySunglasses;
   
-  // Всегда показываем подсказку с требованиями
   let requirements = `Требуется:\n• 100 зернышек (${Math.floor(gameData.seeds)}/100)\n`;
   requirements += `• 5 обычных уток (${normalDucks}/5)\n`;
   requirements += `• 5 уток в шляпе (${hatDucks}/5)`;
@@ -296,14 +741,13 @@ function createDuck(type) {
   saveGame();
   updateUI();
   
-  // После создания утки в очках показываем кровавое перо и утку-почтальона
+  // После создания утки в очках показываем кровавое перо
   if (type === 'sunglasses' && !gameData.questStarted) {
     gameData.questStarted = true;
     saveGame();
     setTimeout(() => {
       alert("Вы заметили странное кровавое перо на берегу...");
       showBloodyFeather();
-      createPostmanDuck();
     }, 1000);
   }
 }
@@ -332,12 +776,12 @@ function initGame() {
   loadInitialDuck();
   updateUI();
 
-  // Показываем кровавое перо и утку-почтальона если квест уже начат
+  // Показываем кровавое перо если квест уже начат
   if (gameData.questStarted) {
     showBloodyFeather();
-    createPostmanDuck();
   }
 
+  // Обработчики кнопок покупки уток
   buyNormalBtn.addEventListener('click', () => {
     if (gameData.seeds >= 20) {
       gameData.seeds -= 20;
@@ -359,11 +803,6 @@ function initGame() {
   buySunglassesBtn.addEventListener('click', () => {
     const normalDucks = ducks.filter(d => d.type === 'normal').length;
     const hatDucks = ducks.filter(d => d.type === 'hat').length;
-    
-    console.log("Проверка покупки утки в очках:");
-    console.log("Зернышки:", gameData.seeds, "Нужно: 100");
-    console.log("Обычные утки:", normalDucks, "Нужно: 5");
-    console.log("Утки в шляпе:", hatDucks, "Нужно: 5");
     
     if (gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5) {
       gameData.seeds -= 100;
@@ -443,97 +882,26 @@ function initGame() {
   });
 
   function loadQuestJournal() {
+    const q = gameData.questProgress;
     let content = `
       <p><strong>Досье: Тени Забвения на Утином Озере</strong></p>
-      <div class="quest-task ${gameData.foundBloodyFeather ? 'quest-done' : ''}" onclick="handleQuestClick('feather')">- Найдено кровавое перо</div>
+      <div class="quest-stats">
+        <div>Прогресс правды: ${q.truthMeter}%</div>
+        <div>Доверие Гавриила: ${q.trustGavriil}%</div>
+        <div>Отношения с Дарио: ${q.relationshipDario}%</div>
+        <div>Отношения с Элианом: ${q.relationshipElian}%</div>
+      </div>
     `;
 
-    // Проверяем, была ли встреча с Люсией
-    if (gameData.metLucia) {
-      content += `<div class="quest-task quest-done" onclick="handleQuestClick('lucia')">- Встреча с /Люсией</div>`;
-    } else {
-      content += `<div class="quest-task" onclick="handleQuestClick('lucia')">- Встреча с /Люсией</div>`;
-    }
-
-    // Проверяем, был ли диалог с Гавриилом
-    if (gameData.talkedToGavriil) {
-      content += `<div class="quest-task quest-done" onclick="handleQuestClick('gavriil')">- Диалог с Инспектором Гавриилом</div>`;
-    } else {
-      content += `<div class="quest-task" onclick="handleQuestClick('gavriil')">- Диалог с Инспектором Гавриилом</div>`;
-    }
-
-    // Проверяем, был ли диалог с Вивьен
-    if (gameData.talkedToVivien) {
-      content += `<div class="quest-task quest-done" onclick="handleQuestClick('vivien')">- Знакомство с Вивьен</div>`;
-    } else {
-      content += `<div class="quest-task" onclick="handleQuestClick('vivien')">- Знакомство с Вивьен</div>`;
-    }
-
-    // Проверяем, был ли диалог с Дарио
-    if (gameData.talkedToDario) {
-      content += `<div class="quest-task quest-done" onclick="handleQuestClick('dario')">- Встреча с Дарио</div>`;
-    } else {
-      content += `<div class="quest-task" onclick="handleQuestClick('dario')">- Встреча с Дарио</div>`;
-    }
-
-    // Проверяем, был ли диалог с Элианом
-    if (gameData.talkedToElian) {
-      content += `<div class="quest-task quest-done" onclick="handleQuestClick('elian')">- Знакомство с Элианом</div>`;
-    } else {
-      content += `<div class="quest-task" onclick="handleQuestClick('elian')">- Знакомство с Элианом</div>`;
-    }
+    // Отображаем прогресс квеста
+    if (q.episode >= 1) content += `<div class="quest-task quest-done">- Найдено кровавое перо</div>`;
+    if (q.metLucia) content += `<div class="quest-task quest-done">- Встреча с Люсией</div>`;
+    if (q.talkedToGavriil) content += `<div class="quest-task quest-done">- Диалог с Инспектором Гавриилом</div>`;
+    if (q.talkedToVivien) content += `<div class="quest-task quest-done">- Знакомство с Вивьен</div>`;
+    if (q.talkedToDario) content += `<div class="quest-task quest-done">- Встреча с Дарио</div>`;
+    if (q.talkedToElian) content += `<div class="quest-task quest-done">- Знакомство с Элианом</div>`;
 
     questJournalContent.innerHTML = content;
-  }
-}
-
-// Функция для обработки кликов по квестовым заданиям
-function handleQuestClick(character) {
-  switch(character) {
-    case 'feather':
-      alert("Странное кровавое перо... Оно кажется старым и имеет магическую ауру. Возможно, оно принадлежало древнему существу.");
-      break;
-    case 'lucia':
-      alert("Люсия: 'Привет! Я слышала, ты нашел странное перо... Это может быть важно. Поговори с инспектором Гавриилом.'");
-      if (!gameData.metLucia) {
-        gameData.metLucia = true;
-        saveGame();
-      }
-      break;
-    case 'gavriil':
-      alert("Инспектор Гавриил: 'Расследование продолжается. Я слышал о подобных перьях в старых записях. Поговори с Вивьен в библиотеке.'");
-      if (!gameData.talkedToGavriil) {
-        gameData.talkedToGavriil = true;
-        saveGame();
-      }
-      break;
-    case 'vivien':
-      alert("Вивьен: 'О, это перо... Я видела подобное в древних манускриптах! Оно принадлежит Забытому Утиному Божеству.'");
-      if (!gameData.talkedToVivien) {
-        gameData.talkedToVivien = true;
-        saveGame();
-      }
-      break;
-    case 'dario':
-      alert("Дарио: 'Хм, интересная находка. Говорят, такие перья появляются перед великими переменами. Найди Элиана, он знает больше.'");
-      if (!gameData.talkedToDario) {
-        gameData.talkedToDario = true;
-        saveGame();
-      }
-      break;
-    case 'elian':
-      alert("Элиан: 'Приветствую! Это перо Забвения... Легенда гласит, что тот, кто соберет все семь таких перьев, получит великую силу!'");
-      if (!gameData.talkedToElian) {
-        gameData.talkedToElian = true;
-        saveGame();
-      }
-      break;
-  }
-  
-  // Обновляем журнал квестов
-  if (questJournalContent) {
-    const event = new Event('click');
-    questJournalBtn.dispatchEvent(event);
   }
 }
 
