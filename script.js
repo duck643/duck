@@ -34,7 +34,7 @@ class Duck {
     this.type = type; // 'normal', 'hat', 'sunglasses'
     this.x = Math.random() * (pondEl.offsetWidth - 60);
     this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
-    this.state = 'walk';
+    this.state = 'walk'; // 'walk', 'peck', 'swim', 'rest'
     this.workCount = 0;
     this.restUntil = 0;
     this.element = document.createElement('div');
@@ -42,19 +42,22 @@ class Duck {
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
-    this.updateImage();
     this.walkFrame = 0;
     this.walkTimer = null;
+    this.updateImage(); // Устанавливаем начальное изображение
   }
 
   updateImage() {
-    let img = 'duck_normal_walk.png';
-    if (this.type === 'hat') img = 'duck_hat_walk.png';
-    if (this.type === 'sunglasses') img = 'duck_sunglasses_walk.png';
+    let img = 'duck_normal.png';
+    if (this.type === 'hat') img = 'duck_hat.png';
+    if (this.type === 'sunglasses') img = 'duck_sunglasses.png';
     if (this.state === 'swim') {
       if (this.type === 'normal') img = 'duck_normal_swim.png';
       if (this.type === 'hat') img = 'duck_hat_swim.png';
       if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
+    }
+    if (this.state === 'walk' && this.walkFrame === 1) {
+      img = img.replace('.png', '_walk.png'); // Меняем на _walk.png
     }
     this.element.style.backgroundImage = `url('${img}')`;
   }
@@ -96,8 +99,8 @@ class Duck {
 
     setTimeout(() => {
       this.state = 'walk';
-      this.updateImage();
       this.startWalking(); // Возобновляем ходьбу
+      this.updateImage();
       if (isAuto) this.workCount++;
     }, 300);
   }
@@ -110,8 +113,8 @@ class Duck {
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
-        this.updateImage();
         this.startWalking();
+        this.updateImage();
         // Через 5 секунд снова идёт плавать
         setTimeout(() => {
           if (this.workCount >= 3) {
@@ -139,8 +142,8 @@ class Duck {
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
-      this.updateImage();
       this.startWalking();
+      this.updateImage();
     }
 
     if (this.state === 'walk') {
