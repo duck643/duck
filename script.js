@@ -65,7 +65,7 @@ class Duck {
     this.walkTimer = setInterval(() => {
       this.walkFrame = (this.walkFrame + 1) % 2;
       this.updateImage();
-    }, 200);
+    }, 200); // Меняем кадр каждые 200 мс
   }
 
   stopWalking() {
@@ -275,5 +275,5 @@ function initGame() {
   }
 }
 
-// Запуск после полной загрузки DOM
+// Запуск игры только после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', initGame);
