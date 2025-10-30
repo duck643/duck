@@ -34,6 +34,33 @@ let questModal = null;
 let closeModal = null;
 let questJournalContent = null;
 
+// Всплывающее облако "кря" - ВЫНЕСЕНО ИЗ initGame
+function showQuackBubble(duckElement) {
+  if (!duckElement || !duckElement.getBoundingClientRect) return;
+  const rect = duckElement.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'quack-bubble';
+  bubble.textContent = 'кря';
+  bubble.style.left = `${rect.left + rect.width / 2}px`;
+  bubble.style.top = `${rect.top - 30}px`;
+  document.body.appendChild(bubble);
+
+  setTimeout(() => {
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'translateY(-8px)';
+  }, 10);
+
+  setTimeout(() => {
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      if (bubble.parentNode) document.body.removeChild(bubble);
+    }, 300);
+  }, 1000);
+}
+
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
@@ -372,33 +399,6 @@ function initGame() {
     }
 
     questJournalContent.innerHTML = content;
-  }
-
-  // Всплывающее облако "кря"
-  function showQuackBubble(duckElement) {
-    if (!duckElement || !duckElement.getBoundingClientRect) return;
-    const rect = duckElement.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-
-    const bubble = document.createElement('div');
-    bubble.className = 'quack-bubble';
-    bubble.textContent = 'кря';
-    bubble.style.left = `${rect.left + rect.width / 2}px`;
-    bubble.style.top = `${rect.top - 30}px`;
-    document.body.appendChild(bubble);
-
-    setTimeout(() => {
-      bubble.style.opacity = '1';
-      bubble.style.transform = 'translateY(-8px)';
-    }, 10);
-
-    setTimeout(() => {
-      bubble.style.opacity = '0';
-      bubble.style.transform = 'translateY(0)';
-      setTimeout(() => {
-        if (bubble.parentNode) document.body.removeChild(bubble);
-      }, 300);
-    }, 1000);
   }
 }
 
