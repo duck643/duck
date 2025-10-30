@@ -18,7 +18,8 @@ let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
   talkedToGavriil: false,
   talkedToVivien: false,
   talkedToDario: false,
-  talkedToElian: false
+  talkedToElian: false,
+  foundBloodyFeather: false
 };
 
 let pondEl = null;
@@ -61,6 +62,60 @@ function showQuackBubble(duckElement) {
   }, 1000);
 }
 
+// Функция для показа кровавого пера
+function showBloodyFeather() {
+  if (gameData.foundBloodyFeather) return;
+  
+  const feather = document.createElement('div');
+  feather.className = 'bloody-feather';
+  feather.style.position = 'absolute';
+  feather.style.bottom = '20px';
+  feather.style.right = '20px';
+  feather.style.width = '40px';
+  feather.style.height = '60px';
+  feather.style.backgroundImage = "url('bloody_feather.png')";
+  feather.style.backgroundSize = 'contain';
+  feather.style.backgroundRepeat = 'no-repeat';
+  feather.style.zIndex = '10';
+  feather.style.cursor = 'pointer';
+  feather.title = 'Странное кровавое перо...';
+  
+  feather.addEventListener('click', () => {
+    alert("Вы нашли кровавое перо! Кажется, это начало чего-то таинственного...");
+    feather.style.display = 'none';
+    gameData.foundBloodyFeather = true;
+    saveGame();
+  });
+  
+  pondEl.appendChild(feather);
+  gameData.foundBloodyFeather = true;
+  saveGame();
+}
+
+// Функция для создания утки-почтальона
+function createPostmanDuck() {
+  const postmanDuck = document.createElement('div');
+  postmanDuck.className = 'duck postman-duck';
+  postmanDuck.style.position = 'absolute';
+  postmanDuck.style.bottom = '10px';
+  postmanDuck.style.left = '10px';
+  postmanDuck.style.width = '60px';
+  postmanDuck.style.height = '70px';
+  postmanDuck.style.backgroundImage = "url('duck_postman.png')";
+  postmanDuck.style.backgroundSize = 'contain';
+  postmanDuck.style.backgroundRepeat = 'no-repeat';
+  postmanDuck.style.zIndex = '15';
+  postmanDuck.style.cursor = 'pointer';
+  postmanDuck.title = 'Утка-почтальон';
+  
+  postmanDuck.addEventListener('click', () => {
+    alert("Привет! Я утка-почтальон. У меня есть сообщение для тебя!");
+    // Здесь можно добавить логику получения письма или квестового предмета
+  });
+  
+  pondEl.appendChild(postmanDuck);
+}
+
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
@@ -68,10 +123,20 @@ function updateUI() {
   duckCountEl.textContent = `Уток: ${ducks.length}`;
   buyNormalBtn.disabled = gameData.seeds < 20;
   buyHatBtn.disabled = gameData.seeds < 50;
+  
   // Условие: утки в очках можно купить только если есть 5 обычных и 5 в шляпе
   const normalDucks = ducks.filter(d => d.type === 'normal').length;
   const hatDucks = ducks.filter(d => d.type === 'hat').length;
-  buySunglassesBtn.disabled = gameData.seeds < 100 || normalDucks < 5 || hatDucks < 5;
+  const canBuySunglasses = gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5;
+  buySunglassesBtn.disabled = !canBuySunglasses;
+  
+  // Показываем подсказку при наведении на кнопку утки в очках
+  if (!canBuySunglasses) {
+    buySunglassesBtn.title = `Требуется: 100 зернышек, 5 обычных уток (${normalDucks}/5), 5 уток в шляпе (${hatDucks}/5)`;
+  } else {
+    buySunglassesBtn.title = 'Купить утку в очках';
+  }
+  
   exchangeBtn.disabled = gameData.seeds < 150 || gameData.dailyExchangeCount >= 5;
 }
 
@@ -92,6 +157,7 @@ class Duck {
     this.walkFrame = 0;
     this.walkTimer = null;
     this.updateImage();
+    this.startWalking();
   }
 
   updateImage() {
@@ -112,7 +178,7 @@ class Duck {
     this.walkTimer = setInterval(() => {
       this.walkFrame = (this.walkFrame + 1) % 2;
       this.updateImage();
-    }, 800); // Медленная анимация, 0.8 секунды
+    }, 800);
   }
 
   stopWalking() {
@@ -141,7 +207,6 @@ class Duck {
 
     showQuackBubble(this.element);
 
-    // Исправление: гарантированно возвращаемся в состояние 'walk'
     setTimeout(() => {
       this.state = 'walk';
       this.startWalking();
@@ -232,6 +297,17 @@ function createDuck(type) {
   gameData.ducks++;
   saveGame();
   updateUI();
+  
+  // После создания утки в очках показываем кровавое перо и утку-почтальона
+  if (type === 'sunglasses' && !gameData.questStarted) {
+    gameData.questStarted = true;
+    saveGame();
+    setTimeout(() => {
+      alert("Вы заметили странное кровавое перо на берегу...");
+      showBloodyFeather();
+      createPostmanDuck();
+    }, 1000);
+  }
 }
 
 function initGame() {
@@ -258,6 +334,12 @@ function initGame() {
   loadInitialDuck();
   updateUI();
 
+  // Показываем кровавое перо и утку-почтальона если квест уже начат
+  if (gameData.questStarted) {
+    showBloodyFeather();
+    createPostmanDuck();
+  }
+
   buyNormalBtn.addEventListener('click', () => {
     if (gameData.seeds >= 20) {
       gameData.seeds -= 20;
@@ -278,11 +360,6 @@ function initGame() {
     if (gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5) {
       gameData.seeds -= 100;
       createDuck('sunglasses');
-      if (!gameData.questStarted) {
-        gameData.questStarted = true;
-        saveGame();
-        alert("Вы заметили странное кровавое перо на берегу...");
-      }
     } else {
       let message = "Недостаточно зернышек или уток.\n";
       if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).\n`;
@@ -359,46 +436,93 @@ function initGame() {
 
   function loadQuestJournal() {
     let content = `
-      <p><strong>Досье:</strong></p>
-      <div class="quest-task">- Найдено кровавое перо</div>
+      <p><strong>Досье: Тени Забвения на Утином Озере</strong></p>
+      <div class="quest-task ${gameData.foundBloodyFeather ? 'quest-done' : ''}">- Найдено кровавое перо</div>
     `;
 
     // Проверяем, была ли встреча с Люсией
     if (gameData.metLucia) {
-      content += `<div class="quest-task quest-done">- Встреча с /Люсией</div>`;
+      content += `<div class="quest-task quest-done" onclick="handleQuestClick('lucia')">- Встреча с /Люсией</div>`;
     } else {
-      content += `<div class="quest-task">- Встреча с /Люсией</div>`;
+      content += `<div class="quest-task" onclick="handleQuestClick('lucia')">- Встреча с /Люсией</div>`;
     }
 
     // Проверяем, был ли диалог с Гавриилом
     if (gameData.talkedToGavriil) {
-      content += `<div class="quest-task quest-done">- Диалог с Инспектором Гавриилом</div>`;
+      content += `<div class="quest-task quest-done" onclick="handleQuestClick('gavriil')">- Диалог с Инспектором Гавриилом</div>`;
     } else {
-      content += `<div class="quest-task">- Диалог с Инспектором Гавриилом</div>`;
+      content += `<div class="quest-task" onclick="handleQuestClick('gavriil')">- Диалог с Инспектором Гавриилом</div>`;
     }
 
     // Проверяем, был ли диалог с Вивьен
     if (gameData.talkedToVivien) {
-      content += `<div class="quest-task quest-done">- Знакомство с Вивьен</div>`;
+      content += `<div class="quest-task quest-done" onclick="handleQuestClick('vivien')">- Знакомство с Вивьен</div>`;
     } else {
-      content += `<div class="quest-task">- Знакомство с Вивьен</div>`;
+      content += `<div class="quest-task" onclick="handleQuestClick('vivien')">- Знакомство с Вивьен</div>`;
     }
 
     // Проверяем, был ли диалог с Дарио
     if (gameData.talkedToDario) {
-      content += `<div class="quest-task quest-done">- Встреча с Дарио</div>`;
+      content += `<div class="quest-task quest-done" onclick="handleQuestClick('dario')">- Встреча с Дарио</div>`;
     } else {
-      content += `<div class="quest-task">- Встреча с Дарио</div>`;
+      content += `<div class="quest-task" onclick="handleQuestClick('dario')">- Встреча с Дарио</div>`;
     }
 
     // Проверяем, был ли диалог с Элианом
     if (gameData.talkedToElian) {
-      content += `<div class="quest-task quest-done">- Знакомство с Элианом</div>`;
+      content += `<div class="quest-task quest-done" onclick="handleQuestClick('elian')">- Знакомство с Элианом</div>`;
     } else {
-      content += `<div class="quest-task">- Знакомство с Элианом</div>`;
+      content += `<div class="quest-task" onclick="handleQuestClick('elian')">- Знакомство с Элианом</div>`;
     }
 
     questJournalContent.innerHTML = content;
+  }
+}
+
+// Функция для обработки кликов по квестовым заданиям
+function handleQuestClick(character) {
+  switch(character) {
+    case 'lucia':
+      alert("Люсия: 'Привет! Я слышала, ты нашел странное перо... Это может быть важно.'");
+      if (!gameData.metLucia) {
+        gameData.metLucia = true;
+        saveGame();
+      }
+      break;
+    case 'gavriil':
+      alert("Инспектор Гавриил: 'Расследование продолжается. Будь осторожен.'");
+      if (!gameData.talkedToGavriil) {
+        gameData.talkedToGavriil = true;
+        saveGame();
+      }
+      break;
+    case 'vivien':
+      alert("Вивьен: 'О, это перо... Я видела подобное раньше. Оно принадлежит древнему роду.'");
+      if (!gameData.talkedToVivien) {
+        gameData.talkedToVivien = true;
+        saveGame();
+      }
+      break;
+    case 'dario':
+      alert("Дарио: 'Хм, интересная находка. Может быть связано с теми старыми легендами...'");
+      if (!gameData.talkedToDario) {
+        gameData.talkedToDario = true;
+        saveGame();
+      }
+      break;
+    case 'elian':
+      alert("Элиан: 'Приветствую! Я изучаю местные предания. Это перо может быть ключом к разгадке.'");
+      if (!gameData.talkedToElian) {
+        gameData.talkedToElian = true;
+        saveGame();
+      }
+      break;
+  }
+  
+  // Обновляем журнал квестов
+  if (questJournalContent) {
+    const event = new Event('click');
+    questJournalBtn.dispatchEvent(event);
   }
 }
 
