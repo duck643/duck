@@ -36,6 +36,11 @@
       text-shadow: 0 0 6px rgba(125, 206, 160, 0.6);
     }
 
+    #feathers {
+      font-size: 18px;
+      margin-top: 4px;
+    }
+
     #pond {
       width: 95vw;
       height: 70vh;
@@ -93,6 +98,15 @@
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
     }
 
+    #questJournal {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 20;
+    }
+
     .quack-bubble {
       position: absolute;
       background: rgba(255, 255, 255, 0.9);
@@ -111,11 +125,14 @@
 <body>
   <div id="ui">
     <div id="score">Зернышек: 0</div>
+    <div id="feathers">Перьев: 0</div>
     <button class="btn" id="buyNormal">Утка (20)</button>
     <button class="btn" id="buyHat">Утка в шляпе (50)</button>
     <button class="btn" id="buySunglasses">Утка в очках (100)</button>
+    <button class="btn" id="exchangeFeather">Обменять (150)</button>
   </div>
   <div id="duckCount">Уток: 0</div>
+  <div id="questJournal">📁</div>
   <div id="pond">
     <div class="water"></div>
   </div>
