@@ -213,6 +213,195 @@
     #questJournal:hover {
       background: rgba(125, 206, 160, 0.2);
     }
+
+    /* === НОВЫЕ СТИЛИ ДЛЯ СИСТЕМЫ КВЕСТА === */
+
+    /* Стили для системы диалогов */
+    .dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .dialog-content {
+      background: #1a2d3f;
+      border: 2px solid #7DCEA0;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 90%;
+      max-height: 80%;
+      overflow-y: auto;
+      color: #E0F7FA;
+      box-shadow: 0 0 20px rgba(125, 206, 160, 0.3);
+    }
+
+    .dialog-content h3 {
+      color: #7DCEA0;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .dialog-message {
+      margin: 15px 0;
+      line-height: 1.5;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 3px solid #7DCEA0;
+    }
+
+    .dialog-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .dialog-choice {
+      background: #2c3e50;
+      border: 1px solid #7DCEA0;
+      color: #E0F7FA;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .dialog-choice:hover {
+      background: #34495e;
+      transform: translateX(5px);
+      border-color: #E0F7FA;
+    }
+
+    .dialog-choice:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Стили для NPC */
+    .npc {
+      animation: npc-float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .npc:hover {
+      filter: drop-shadow(0 0 12px rgba(125, 206, 160, 0.8));
+      transform: scale(1.1);
+    }
+
+    @keyframes npc-float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Статистика квеста */
+    .quest-stats {
+      background: #2c3e50;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border: 1px solid #7DCEA0;
+    }
+
+    .quest-stats div {
+      margin: 5px 0;
+      padding: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    /* Предметы квеста */
+    .quest-item {
+      transition: all 0.3s ease;
+    }
+
+    .quest-item:hover {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8));
+    }
+
+    /* Индикаторы прогресса */
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #2c3e50;
+      border-radius: 5px;
+      margin: 5px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7DCEA0, #27ae60);
+      border-radius: 5px;
+      transition: width 0.5s ease;
+    }
+
+    /* Анимации для разных NPC */
+    .npc-postman {
+      animation: postman-delivery 2s ease-in-out infinite;
+    }
+
+    @keyframes postman-delivery {
+      0%, 100% { transform: translateX(0px) rotate(0deg); }
+      25% { transform: translateX(5px) rotate(5deg); }
+      75% { transform: translateX(-5px) rotate(-5deg); }
+    }
+
+    .npc-lucia {
+      animation: lucia-tremble 4s ease-in-out infinite;
+    }
+
+    @keyframes lucia-tremble {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(2px) rotate(1deg); }
+      50% { transform: translateY(0px) rotate(0deg); }
+      75% { transform: translateY(2px) rotate(-1deg); }
+    }
+
+    /* Стили для требований в диалогах */
+    .requirement-not-met {
+      opacity: 0.7;
+      position: relative;
+    }
+
+    .requirement-not-met::after {
+      content: "❌ Требование не выполнено";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: #ff6b6b;
+    }
+
+    /* Стили для выбора с расходом ресурсов */
+    .cost-choice {
+      position: relative;
+      border-left: 3px solid #f39c12 !important;
+    }
+
+    .cost-choice::before {
+      content: "💸";
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   </style>
 </head>
 <body>
