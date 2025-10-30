@@ -75,7 +75,7 @@ class Duck {
     }
   }
 
-  peck(isAuto = false) {
+    peck(isAuto = false) {
     if (this.state === 'rest') return;
     if (isAuto && this.workCount >= 3) {
       this.rest();
@@ -96,12 +96,11 @@ class Duck {
 
     setTimeout(() => {
       this.state = 'walk';
-      this.startWalking();
+      this.startWalking(); // <-- ВАЖНО: возобновляем ходьбу!
       this.updateImage();
       if (isAuto) this.workCount++;
     }, 300);
   }
-
   rest() {
     this.state = 'rest';
     this.workCount = 0;
