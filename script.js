@@ -1,3 +1,33 @@
+// Telegram WebApp
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.expand();
+  tg.disableVerticalSwipes();
+}
+
+// Загрузка или инициализация данных
+let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
+  seeds: 20,        // 20 зернышек при первом заходе
+  ducks: 1,         // уже есть 1 утка
+  nextDuckId: 1
+};
+
+const pondEl = document.getElementById('pond');
+const scoreEl = document.getElementById('score');
+const duckCountEl = document.getElementById('duckCount');
+
+const buyNormalBtn = document.getElementById('buyNormal');
+const buyHatBtn = document.getElementById('buyHat');
+const buySunglassesBtn = document.getElementById('buySunglasses');
+
+function updateUI() {
+  scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
+  duckCountEl.textContent = `Уток: ${ducks.length}`;
+  buyNormalBtn.disabled = gameData.seeds < 20;
+  buyHatBtn.disabled = gameData.seeds < 50;
+  buySunglassesBtn.disabled = gameData.seeds < 100;
+}
+
 class Duck {
   constructor(id, type) {
     this.id = id;
@@ -25,9 +55,8 @@ class Duck {
       if (this.type === 'normal') img = 'duck_normal_swim.png';
       if (this.type === 'hat') img = 'duck_hat_swim.png';
       if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
-    }
-    if (this.state === 'walk' && this.walkFrame === 1) {
-      img = img.replace('.png', '_walk.png'); // Меняем на _walk.png
+    } else if (this.state === 'walk' && this.walkFrame === 1) {
+      img = img.replace('.png', '_walk.png');
     }
     this.element.style.backgroundImage = `url('${img}')`;
   }
@@ -36,7 +65,7 @@ class Duck {
     this.walkTimer = setInterval(() => {
       this.walkFrame = (this.walkFrame + 1) % 2;
       this.updateImage();
-    }, 200); // Меняем кадр каждые 200 мс
+    }, 200);
   }
 
   stopWalking() {
@@ -54,8 +83,7 @@ class Duck {
     }
 
     this.state = 'peck';
-    // Временно меняем на pecking (если есть)
-    let img = 'duck_pecking.png';
+    let img = 'duck_normal_pecking.png';
     if (this.type === 'hat') img = 'duck_hat_pecking.png';
     if (this.type === 'sunglasses') img = 'duck_sunglasses_pecking.png';
     this.element.style.backgroundImage = `url('${img}')`;
@@ -63,14 +91,12 @@ class Duck {
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
     updateUI();
-
-    // Облако "кря"
     showQuackBubble(this.element);
 
     setTimeout(() => {
       this.state = 'walk';
-      this.startWalking();
       this.updateImage();
+      this.startWalking();
       if (isAuto) this.workCount++;
     }, 300);
   }
@@ -83,23 +109,20 @@ class Duck {
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
-        this.startWalking();
         this.updateImage();
-        // Через 5 секунд снова идёт плавать
-        setTimeout(() => {
-          if (this.workCount >= 3) {
-            this.state = 'swim';
-            this.stopWalking();
+        this.startWalking();
+        if (this.workCount >= 3) {
+          this.state = 'swim';
+          this.stopWalking();
+          this.updateImage();
+          this.y = pondEl.offsetHeight - 50;
+          setTimeout(() => {
+            this.state = 'walk';
+            this.startWalking();
             this.updateImage();
-            this.y = pondEl.offsetHeight - 50;
-            setTimeout(() => {
-              this.state = 'walk';
-              this.startWalking();
-              this.updateImage();
-              this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
-            }, 5000);
-          }
-        }, 1000);
+            this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
+          }, 5000);
+        }
       }
     }, 10000);
   }
@@ -112,8 +135,8 @@ class Duck {
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
-      this.startWalking();
       this.updateImage();
+      this.startWalking();
     }
 
     if (this.state === 'walk') {
@@ -138,3 +161,78 @@ class Duck {
     this.updatePosition();
   }
 }
+
+let ducks = [];
+
+function loadInitialDuck() {
+  if (ducks.length === 0 && gameData.ducks === 1 && gameData.nextDuckId === 1) {
+    const initialDuck = new Duck(0, 'normal');
+    ducks.push(initialDuck);
+    gameData.nextDuckId = 1;
+  }
+}
+
+function saveGame() {
+  localStorage.setItem('duckIsle', JSON.stringify(gameData));
+}
+
+function createDuck(type) {
+  const newDuck = new Duck(gameData.nextDuckId++, type);
+  ducks.push(newDuck);
+  gameData.ducks++;
+  saveGame();
+  updateUI();
+}
+
+buyNormalBtn.addEventListener('click', () => {
+  if (gameData.seeds >= 20) {
+    gameData.seeds -= 20;
+    createDuck('normal');
+  }
+});
+
+buyHatBtn.addEventListener('click', () => {
+  if (gameData.seeds >= 50) {
+    gameData.seeds -= 50;
+    createDuck('hat');
+  }
+});
+
+buySunglassesBtn.addEventListener('click', () => {
+  if (gameData.seeds >= 100) {
+    gameData.seeds -= 100;
+    createDuck('sunglasses');
+  }
+});
+
+pondEl.addEventListener('click', (e) => {
+  const clickedDuck = e.target.closest('.duck');
+  if (clickedDuck) {
+    const duck = ducks.find(d => d.element === clickedDuck);
+    if (duck) duck.peck(false);
+  }
+});
+
+// Автоматическая работа
+setInterval(() => {
+  ducks.forEach(duck => {
+    if (duck.state !== 'rest' && Math.random() < 0.2) {
+      duck.peck(true);
+    }
+  });
+}, 10000);
+
+// Основной цикл движения
+setInterval(() => {
+  ducks.forEach(duck => duck.update());
+}, 100);
+
+// Всплывающее облако "кря"
+function showQuackBubble(duckElement) {
+  const bubble = document.createElement('div');
+  bubble.className = 'quack-bubble';
+  bubble.textContent = 'кря';
+  const rect = duckElement.getBoundingClientRect();
+  bubble.style.left = `${rect.left + rect.width / 2}px`;
+  bubble.style.top = `${rect.top - 30}px`;
+  document
