@@ -251,10 +251,14 @@ function initGame() {
 
   // Всплывающее облако "кря"
   function showQuackBubble(duckElement) {
+    if (!duckElement || !duckElement.getBoundingClientRect) return;
+
+    const rect = duckElement.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
     const bubble = document.createElement('div');
     bubble.className = 'quack-bubble';
     bubble.textContent = 'кря';
-    const rect = duckElement.getBoundingClientRect();
     bubble.style.left = `${rect.left + rect.width / 2}px`;
     bubble.style.top = `${rect.top - 30}px`;
     document.body.appendChild(bubble);
@@ -268,11 +272,12 @@ function initGame() {
       bubble.style.opacity = '0';
       bubble.style.transform = 'translateY(0)';
       setTimeout(() => {
-        document.body.removeChild(bubble);
+        if (bubble.parentNode) {
+          document.body.removeChild(bubble);
+        }
       }, 300);
     }, 1000);
   }
-}
 
 // Запуск игры только после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', initGame);
