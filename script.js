@@ -110,7 +110,6 @@ function createPostmanDuck() {
   
   postmanDuck.addEventListener('click', () => {
     alert("Привет! Я утка-почтальон. У меня есть сообщение для тебя! Кажется, это кровавое перо связано со старыми легендами этого озера.");
-    // Здесь можно добавить логику получения письма или квестового предмета
   });
   
   pondEl.appendChild(postmanDuck);
@@ -118,9 +117,11 @@ function createPostmanDuck() {
 
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
+  
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
   feathersEl.textContent = `Перьев: ${gameData.feathers}`;
   duckCountEl.textContent = `Уток: ${ducks.length}`;
+  
   buyNormalBtn.disabled = gameData.seeds < 20;
   buyHatBtn.disabled = gameData.seeds < 50;
   
@@ -128,14 +129,15 @@ function updateUI() {
   const normalDucks = ducks.filter(d => d.type === 'normal').length;
   const hatDucks = ducks.filter(d => d.type === 'hat').length;
   const canBuySunglasses = gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5;
+  
   buySunglassesBtn.disabled = !canBuySunglasses;
   
-  // Показываем подсказку при наведении на кнопку утки в очках
-  if (!canBuySunglasses) {
-    buySunglassesBtn.title = `Требуется: 100 зернышек, 5 обычных уток (${normalDucks}/5), 5 уток в шляпе (${hatDucks}/5)`;
-  } else {
-    buySunglassesBtn.title = 'Купить утку в очках';
-  }
+  // Всегда показываем подсказку с требованиями
+  let requirements = `Требуется:\n• 100 зернышек (${Math.floor(gameData.seeds)}/100)\n`;
+  requirements += `• 5 обычных уток (${normalDucks}/5)\n`;
+  requirements += `• 5 уток в шляпе (${hatDucks}/5)`;
+  
+  buySunglassesBtn.title = requirements;
   
   exchangeBtn.disabled = gameData.seeds < 150 || gameData.dailyExchangeCount >= 5;
 }
@@ -357,14 +359,20 @@ function initGame() {
   buySunglassesBtn.addEventListener('click', () => {
     const normalDucks = ducks.filter(d => d.type === 'normal').length;
     const hatDucks = ducks.filter(d => d.type === 'hat').length;
+    
+    console.log("Проверка покупки утки в очках:");
+    console.log("Зернышки:", gameData.seeds, "Нужно: 100");
+    console.log("Обычные утки:", normalDucks, "Нужно: 5");
+    console.log("Утки в шляпе:", hatDucks, "Нужно: 5");
+    
     if (gameData.seeds >= 100 && normalDucks >= 5 && hatDucks >= 5) {
       gameData.seeds -= 100;
       createDuck('sunglasses');
     } else {
-      let message = "Недостаточно зернышек или уток.\n";
-      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).\n`;
-      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks}).\n`;
-      if (hatDucks < 5) message += `- Нужно 5 уток в шляпе (у вас ${hatDucks}).`;
+      let message = "Нельзя купить утку в очках!\n";
+      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)})\n`;
+      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks})\n`;
+      if (hatDucks < 5) message += `- Нужно 5 уток в шляпе (у вас ${hatDucks})`;
       alert(message);
     }
   });
