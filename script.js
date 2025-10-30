@@ -75,7 +75,7 @@ class Duck {
     }
   }
 
-    peck(isAuto = false) {
+  peck(isAuto = false) {
     if (this.state === 'rest') return;
     if (isAuto && this.workCount >= 3) {
       this.rest();
@@ -92,11 +92,14 @@ class Duck {
     saveGame();
     updateUI();
 
-    showQuackBubble(this.element);
+    // Показываем облако "кря" только если элемент существует и имеет размеры
+    if (this.element && this.element.offsetWidth > 0) {
+      showQuackBubble(this.element);
+    }
 
     setTimeout(() => {
       this.state = 'walk';
-      this.startWalking(); // <-- ВАЖНО: возобновляем ходьбу!
+      this.startWalking();
       this.updateImage();
       if (isAuto) this.workCount++;
     }, 300);
