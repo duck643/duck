@@ -5,10 +5,10 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-// Загрузка или инициализация данных
+// Сохранение данных
 let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
-  seeds: 20,
-  ducks: 1,          // уже есть 1 утка
+  seeds: 0,
+  ducks: 0,
   nextDuckId: 1
 };
 
@@ -43,18 +43,34 @@ class Duck {
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
     this.updateImage();
+    this.walkFrame = 0;
+    this.walkTimer = null;
   }
 
   updateImage() {
-    let img = 'duck_normal.png';
-    if (this.type === 'hat') img = 'duck_hat.png';
-    if (this.type === 'sunglasses') img = 'duck_sunglasses.png';
+    let img = 'duck_normal_walk.png';
+    if (this.type === 'hat') img = 'duck_hat_walk.png';
+    if (this.type === 'sunglasses') img = 'duck_sunglasses_walk.png';
     if (this.state === 'swim') {
-      if (this.type === 'normal') img = 'duck_swim.png';
+      if (this.type === 'normal') img = 'duck_normal_swim.png';
       if (this.type === 'hat') img = 'duck_hat_swim.png';
       if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
     }
     this.element.style.backgroundImage = `url('${img}')`;
+  }
+
+  startWalking() {
+    this.walkTimer = setInterval(() => {
+      this.walkFrame = (this.walkFrame + 1) % 2;
+      this.updateImage();
+    }, 200); // Меняем кадр каждые 200 мс
+  }
+
+  stopWalking() {
+    if (this.walkTimer) {
+      clearInterval(this.walkTimer);
+      this.walkTimer = null;
+    }
   }
 
   peck(isAuto = false) {
@@ -81,6 +97,7 @@ class Duck {
     setTimeout(() => {
       this.state = 'walk';
       this.updateImage();
+      this.startWalking(); // Возобновляем ходьбу
       if (isAuto) this.workCount++;
     }, 300);
   }
@@ -94,14 +111,17 @@ class Duck {
       if (this.state === 'rest') {
         this.state = 'walk';
         this.updateImage();
+        this.startWalking();
         // Через 5 секунд снова идёт плавать
         setTimeout(() => {
           if (this.workCount >= 3) {
             this.state = 'swim';
+            this.stopWalking();
             this.updateImage();
             this.y = pondEl.offsetHeight - 50;
             setTimeout(() => {
               this.state = 'walk';
+              this.startWalking();
               this.updateImage();
               this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
             }, 5000);
@@ -120,6 +140,7 @@ class Duck {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
       this.updateImage();
+      this.startWalking();
     }
 
     if (this.state === 'walk') {
@@ -130,10 +151,12 @@ class Duck {
 
       if (this.workCount >= 3) {
         this.state = 'swim';
+        this.stopWalking();
         this.updateImage();
         this.y = pondEl.offsetHeight - 50;
         setTimeout(() => {
           this.state = 'walk';
+          this.startWalking();
           this.updateImage();
           this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
         }, 5000);
@@ -146,11 +169,13 @@ class Duck {
 let ducks = [];
 
 function loadInitialDuck() {
-  // Создаём одну обычную утку при первом запуске
-  if (ducks.length === 0 && gameData.ducks === 1 && gameData.nextDuckId === 1) {
+  // При первом запуске создаём одну обычную утку
+  if (ducks.length === 0 && gameData.ducks === 0) {
     const initialDuck = new Duck(0, 'normal');
     ducks.push(initialDuck);
-    gameData.nextDuckId = 1; // следующая утка получит ID = 1
+    gameData.ducks = 1;
+    gameData.nextDuckId = 1;
+    saveGame();
   }
 }
 
