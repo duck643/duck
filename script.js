@@ -42,8 +42,6 @@ class Duck {
     this.element.style.left = this.x + 'px';
     this.element.style.top = this.y + 'px';
     pondEl.appendChild(this.element);
-    this.walkFrame = 0;
-    this.walkTimer = null;
     this.updateImage();
   }
 
@@ -52,27 +50,11 @@ class Duck {
     if (this.type === 'hat') img = 'duck_hat.png';
     if (this.type === 'sunglasses') img = 'duck_sunglasses.png';
     if (this.state === 'swim') {
-      if (this.type === 'normal') img = 'duck_normal_swim.png';
+      if (this.type === 'normal') img = 'duck_swim.png';
       if (this.type === 'hat') img = 'duck_hat_swim.png';
       if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
-    } else if (this.state === 'walk' && this.walkFrame === 1) {
-      img = img.replace('.png', '_walk.png');
     }
     this.element.style.backgroundImage = `url('${img}')`;
-  }
-
-  startWalking() {
-    this.walkTimer = setInterval(() => {
-      this.walkFrame = (this.walkFrame + 1) % 2;
-      this.updateImage();
-    }, 200);
-  }
-
-  stopWalking() {
-    if (this.walkTimer) {
-      clearInterval(this.walkTimer);
-      this.walkTimer = null;
-    }
   }
 
   peck(isAuto = false) {
@@ -96,7 +78,6 @@ class Duck {
 
     setTimeout(() => {
       this.state = 'walk';
-      this.startWalking();
       this.updateImage();
       if (isAuto) this.workCount++;
     }, 300);
@@ -110,16 +91,13 @@ class Duck {
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
-        this.startWalking();
         this.updateImage();
         if (this.workCount >= 3) {
           this.state = 'swim';
-          this.stopWalking();
           this.updateImage();
           this.y = pondEl.offsetHeight - 50;
           setTimeout(() => {
             this.state = 'walk';
-            this.startWalking();
             this.updateImage();
             this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
           }, 5000);
@@ -136,24 +114,16 @@ class Duck {
   update() {
     if (this.state === 'rest' && Date.now() > this.restUntil) {
       this.state = 'walk';
-      this.startWalking();
       this.updateImage();
     }
 
     if (this.state === 'walk') {
-      this.x += (Math.random() - 0.5) * 3;
-      this.y += (Math.random() - 0.5) * 1.5;
-      this.x = Math.max(10, Math.min(pondEl.offsetWidth - 60, this.x));
-      this.y = Math.max(10, Math.min(pondEl.offsetHeight - 70, this.y));
-
       if (this.workCount >= 3) {
         this.state = 'swim';
-        this.stopWalking();
         this.updateImage();
         this.y = pondEl.offsetHeight - 50;
         setTimeout(() => {
           this.state = 'walk';
-          this.startWalking();
           this.updateImage();
           this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
         }, 5000);
@@ -199,11 +169,9 @@ function initGame() {
     return;
   }
 
-  // Загрузка начальной утки
   loadInitialDuck();
   updateUI();
 
-  // Обработчики кнопок
   buyNormalBtn.addEventListener('click', () => {
     if (gameData.seeds >= 20) {
       gameData.seeds -= 20;
@@ -233,7 +201,6 @@ function initGame() {
     }
   });
 
-  // Автоматическая работа
   setInterval(() => {
     ducks.forEach(duck => {
       if (duck.state !== 'rest' && Math.random() < 0.2) {
@@ -242,38 +209,35 @@ function initGame() {
     });
   }, 10000);
 
-  // Основной цикл движения
   setInterval(() => {
     ducks.forEach(duck => duck.update());
   }, 100);
-}
 
-// Всплывающее облако "кря"
-function showQuackBubble(duckElement) {
-  if (!duckElement || !duckElement.getBoundingClientRect) return;
-  const rect = duckElement.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return;
+  function showQuackBubble(duckElement) {
+    if (!duckElement || !duckElement.getBoundingClientRect) return;
+    const rect = duckElement.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
 
-  const bubble = document.createElement('div');
-  bubble.className = 'quack-bubble';
-  bubble.textContent = 'кря';
-  bubble.style.left = `${rect.left + rect.width / 2}px`;
-  bubble.style.top = `${rect.top - 30}px`;
-  document.body.appendChild(bubble);
+    const bubble = document.createElement('div');
+    bubble.className = 'quack-bubble';
+    bubble.textContent = 'кря';
+    bubble.style.left = `${rect.left + rect.width / 2}px`;
+    bubble.style.top = `${rect.top - 30}px`;
+    document.body.appendChild(bubble);
 
-  setTimeout(() => {
-    bubble.style.opacity = '1';
-    bubble.style.transform = 'translateY(-8px)';
-  }, 10);
-
-  setTimeout(() => {
-    bubble.style.opacity = '0';
-    bubble.style.transform = 'translateY(0)';
     setTimeout(() => {
-      if (bubble.parentNode) document.body.removeChild(bubble);
-    }, 300);
-  }, 1000);
+      bubble.style.opacity = '1';
+      bubble.style.transform = 'translateY(-8px)';
+    }, 10);
+
+    setTimeout(() => {
+      bubble.style.opacity = '0';
+      bubble.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        if (bubble.parentNode) document.body.removeChild(bubble);
+      }, 300);
+    }, 1000);
+  }
 }
 
-// Запуск игры после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', initGame);
