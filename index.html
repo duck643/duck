@@ -66,10 +66,22 @@
       position: absolute;
       width: 60px;
       height: 70px;
-      background: url('duck_normal.png') no-repeat center;
-      background-size: contain;
       cursor: pointer;
       z-index: 5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .duck img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+    }
+
+    .duck:hover img {
+      transform: scale(1.1);
     }
 
     .btn {
@@ -187,7 +199,7 @@
       position: absolute;
       width: 30px;
       height: 40px;
-      background: url('bloody_feather.png') no-repeat center;
+      background: url('feather.png') no-repeat center;
       background-size: contain;
       z-index: 6;
       animation: float 3s ease-in-out infinite;
@@ -202,10 +214,13 @@
 
     /* Стили для утки-почтальона */
     .postman-duck {
-      background: url('postman_duck.png') no-repeat center;
-      background-size: contain;
       width: 70px;
       height: 80px;
+    }
+
+    .postman-duck img {
+      width: 100%;
+      height: auto;
     }
 
     /* Кнопка журнала квестов */
@@ -403,17 +418,51 @@
 
     function addDuck(type = 'normal') {
       const duck = document.createElement('div');
-      duck.className = 'duck npc';
+      duck.className = 'duck';
+
+      // Создаем img внутри утки
+      const img = document.createElement('img');
+      let imgSrc = '';
+
       if (type === 'hat') {
-        duck.style.backgroundImage = "url('duck_hat.png')";
+        imgSrc = 'duck_hat_walk.png'; // по умолчанию — ходьба
       } else if (type === 'sunglasses') {
-        duck.style.backgroundImage = "url('duck_sunglasses.png')";
+        imgSrc = 'duck_sunglasses_walk.png';
       } else {
-        duck.style.backgroundImage = "url('duck_normal.png')";
+        imgSrc = 'duck_normal_walk.png';
       }
+
+      img.src = imgSrc;
+      img.alt = type + ' duck';
+      duck.appendChild(img);
+
+      // Позиция
       const pos = getRandomPosition();
       duck.style.left = `${pos.x}px`;
       duck.style.top = `${pos.y}px`;
+
+      // Обработчик клика — меняет анимацию на "клевание"
+      duck.addEventListener('click', () => {
+        if (type === 'hat') {
+          img.src = 'duck_hat_pecking.png';
+          setTimeout(() => {
+            img.src = 'duck_hat_walk.png';
+          }, 500);
+        } else if (type === 'sunglasses') {
+          img.src = 'duck_sunglasses_pecking.png';
+          setTimeout(() => {
+            img.src = 'duck_sunglasses_walk.png';
+          }, 500);
+        } else {
+          img.src = 'duck_normal_pecking.png';
+          setTimeout(() => {
+            img.src = 'duck_normal_walk.png';
+          }, 500);
+        }
+        score++;
+        updateUI();
+      });
+
       pond.appendChild(duck);
     }
 
@@ -438,6 +487,12 @@
       postman.className = 'duck npc postman-duck';
       postman.style.left = '20%';
       postman.style.top = '60%';
+
+      const img = document.createElement('img');
+      img.src = 'duck_postman.png';
+      img.alt = 'Postman Duck';
+      postman.appendChild(img);
+
       postman.addEventListener('click', startQuestDialog);
       pond.appendChild(postman);
       postmanAdded = true;
@@ -474,7 +529,6 @@
       if (feathers >= 5) {
         closeDialog();
         showNotification('Письмо открыто! Новая глава...');
-        // Здесь можно добавить логику следующего этапа квеста
       } else {
         showNotification('Нужно 5 перьев!');
       }
@@ -537,7 +591,7 @@
 
     // --- Клик по пруду — добавление зернышек ---
     pond.addEventListener('click', (e) => {
-      if (!e.target.classList.contains('duck') && !e.target.classList.contains('bloody-feather')) {
+      if (!e.target.closest('.duck') && !e.target.classList.contains('bloody-feather')) {
         score++;
         updateUI();
       }
