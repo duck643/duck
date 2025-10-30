@@ -35,7 +35,7 @@ let questModal = null;
 let closeModal = null;
 let questJournalContent = null;
 
-// Всплывающее облако "кря" - ВЫНЕСЕНО ИЗ initGame
+// Всплывающее облако "кря"
 function showQuackBubble(duckElement) {
   if (!duckElement || !duckElement.getBoundingClientRect) return;
   const rect = duckElement.getBoundingClientRect();
@@ -73,7 +73,7 @@ function showBloodyFeather() {
   feather.style.right = '20px';
   feather.style.width = '40px';
   feather.style.height = '60px';
-  feather.style.backgroundImage = "url('bloody_feather.png')";
+  feather.style.backgroundImage = "url('feather.png')";
   feather.style.backgroundSize = 'contain';
   feather.style.backgroundRepeat = 'no-repeat';
   feather.style.zIndex = '10';
@@ -109,7 +109,7 @@ function createPostmanDuck() {
   postmanDuck.title = 'Утка-почтальон';
   
   postmanDuck.addEventListener('click', () => {
-    alert("Привет! Я утка-почтальон. У меня есть сообщение для тебя!");
+    alert("Привет! Я утка-почтальон. У меня есть сообщение для тебя! Кажется, это кровавое перо связано со старыми легендами этого озера.");
     // Здесь можно добавить логику получения письма или квестового предмета
   });
   
@@ -164,13 +164,21 @@ class Duck {
     let img = 'duck_normal.png';
     if (this.type === 'hat') img = 'duck_hat.png';
     if (this.type === 'sunglasses') img = 'duck_sunglasses.png';
+    
     if (this.state === 'swim') {
-      if (this.type === 'normal') img = 'duck_swim.png';
+      if (this.type === 'normal') img = 'duck_normal_swim.png';
       if (this.type === 'hat') img = 'duck_hat_swim.png';
       if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
+    } else if (this.state === 'peck') {
+      if (this.type === 'normal') img = 'duck_pecking.png';
+      if (this.type === 'hat') img = 'duck_hat_pecking.png';
+      if (this.type === 'sunglasses') img = 'duck_sunglasses_pecking.png';
     } else if (this.state === 'walk' && this.walkFrame === 1) {
-      img = img.replace('.png', '_walk.png');
+      if (this.type === 'normal') img = 'duck_normal_walk.png';
+      if (this.type === 'hat') img = 'duck_hat_walk.png';
+      if (this.type === 'sunglasses') img = 'duck_sunglasses_walk.png';
     }
+    
     this.element.style.backgroundImage = `url('${img}')`;
   }
 
@@ -196,10 +204,7 @@ class Duck {
     }
 
     this.state = 'peck';
-    let img = 'duck_pecking.png';
-    if (this.type === 'hat') img = 'duck_hat_pecking.png';
-    if (this.type === 'sunglasses') img = 'duck_sunglasses_pecking.png';
-    this.element.style.backgroundImage = `url('${img}')`;
+    this.updateImage();
 
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
@@ -219,24 +224,14 @@ class Duck {
     this.state = 'rest';
     this.workCount = 0;
     this.restUntil = Date.now() + 10000;
+    this.stopWalking();
+    this.updateImage();
 
     setTimeout(() => {
       if (this.state === 'rest') {
         this.state = 'walk';
         this.startWalking();
         this.updateImage();
-        if (this.workCount >= 3) {
-          this.state = 'swim';
-          this.stopWalking();
-          this.updateImage();
-          this.y = pondEl.offsetHeight - 50;
-          setTimeout(() => {
-            this.state = 'walk';
-            this.startWalking();
-            this.updateImage();
-            this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
-          }, 5000);
-        }
       }
     }, 10000);
   }
@@ -259,7 +254,7 @@ class Duck {
       this.x = Math.max(10, Math.min(pondEl.offsetWidth - 60, this.x));
       this.y = Math.max(10, Math.min(pondEl.offsetHeight - 70, this.y));
 
-      if (this.workCount >= 3) {
+      if (this.workCount >= 3 && Math.random() < 0.01) {
         this.state = 'swim';
         this.stopWalking();
         this.updateImage();
@@ -269,6 +264,7 @@ class Duck {
           this.startWalking();
           this.updateImage();
           this.y = pondEl.offsetHeight - 100 + Math.random() * 30;
+          this.workCount = 0;
         }, 5000);
       }
     }
@@ -344,6 +340,8 @@ function initGame() {
     if (gameData.seeds >= 20) {
       gameData.seeds -= 20;
       createDuck('normal');
+    } else {
+      alert(`Недостаточно зернышек! Нужно 20, у вас ${Math.floor(gameData.seeds)}`);
     }
   });
 
@@ -351,6 +349,8 @@ function initGame() {
     if (gameData.seeds >= 50) {
       gameData.seeds -= 50;
       createDuck('hat');
+    } else {
+      alert(`Недостаточно зернышек! Нужно 50, у вас ${Math.floor(gameData.seeds)}`);
     }
   });
 
@@ -437,7 +437,7 @@ function initGame() {
   function loadQuestJournal() {
     let content = `
       <p><strong>Досье: Тени Забвения на Утином Озере</strong></p>
-      <div class="quest-task ${gameData.foundBloodyFeather ? 'quest-done' : ''}">- Найдено кровавое перо</div>
+      <div class="quest-task ${gameData.foundBloodyFeather ? 'quest-done' : ''}" onclick="handleQuestClick('feather')">- Найдено кровавое перо</div>
     `;
 
     // Проверяем, была ли встреча с Люсией
@@ -482,36 +482,39 @@ function initGame() {
 // Функция для обработки кликов по квестовым заданиям
 function handleQuestClick(character) {
   switch(character) {
+    case 'feather':
+      alert("Странное кровавое перо... Оно кажется старым и имеет магическую ауру. Возможно, оно принадлежало древнему существу.");
+      break;
     case 'lucia':
-      alert("Люсия: 'Привет! Я слышала, ты нашел странное перо... Это может быть важно.'");
+      alert("Люсия: 'Привет! Я слышала, ты нашел странное перо... Это может быть важно. Поговори с инспектором Гавриилом.'");
       if (!gameData.metLucia) {
         gameData.metLucia = true;
         saveGame();
       }
       break;
     case 'gavriil':
-      alert("Инспектор Гавриил: 'Расследование продолжается. Будь осторожен.'");
+      alert("Инспектор Гавриил: 'Расследование продолжается. Я слышал о подобных перьях в старых записях. Поговори с Вивьен в библиотеке.'");
       if (!gameData.talkedToGavriil) {
         gameData.talkedToGavriil = true;
         saveGame();
       }
       break;
     case 'vivien':
-      alert("Вивьен: 'О, это перо... Я видела подобное раньше. Оно принадлежит древнему роду.'");
+      alert("Вивьен: 'О, это перо... Я видела подобное в древних манускриптах! Оно принадлежит Забытому Утиному Божеству.'");
       if (!gameData.talkedToVivien) {
         gameData.talkedToVivien = true;
         saveGame();
       }
       break;
     case 'dario':
-      alert("Дарио: 'Хм, интересная находка. Может быть связано с теми старыми легендами...'");
+      alert("Дарио: 'Хм, интересная находка. Говорят, такие перья появляются перед великими переменами. Найди Элиана, он знает больше.'");
       if (!gameData.talkedToDario) {
         gameData.talkedToDario = true;
         saveGame();
       }
       break;
     case 'elian':
-      alert("Элиан: 'Приветствую! Я изучаю местные предания. Это перо может быть ключом к разгадке.'");
+      alert("Элиан: 'Приветствую! Это перо Забвения... Легенда гласит, что тот, кто соберет все семь таких перьев, получит великую силу!'");
       if (!gameData.talkedToElian) {
         gameData.talkedToElian = true;
         saveGame();
