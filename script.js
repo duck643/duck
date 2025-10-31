@@ -5,7 +5,7 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-let gameData = JSON.parse(localStorage.getItem('duckIsle')) || {
+let gameData = JSON.parse(localStorage.getItem('duckIsle_v2')) || {
   seeds: 20,
   feathers: 0,
   ducks: 1,
@@ -202,7 +202,7 @@ class Duck {
 }
 
 function saveGame() {
-  localStorage.setItem('duckIsle', JSON.stringify(gameData));
+  localStorage.setItem('duckIsle_v2', JSON.stringify(gameData));
 }
 
 function loadInitialDuck() {
