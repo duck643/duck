@@ -269,12 +269,9 @@ function initGame() {
         alert("Вы заметили странное кровавое перо на берегу...");
       }
     } else {
-      let message = "Недостаточно зернышек или уток.
-";
-      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).
-`;
-      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks}).
-`;
+      let message = "Недостаточно зернышек или уток.\n"; // ← Добавлен символ перевода строки \n
+      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).\n`;
+      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks}).\n`;
       if (hatDucks < 5) message += `- Нужно 5 уток в шляпе (у вас ${hatDucks}).`;
       alert(message);
     }
