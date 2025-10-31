@@ -11,7 +11,6 @@
       margin: 0;
       padding: 0;
     }
-
     body {
       background: #0F1A2C;
       color: #E0F7FA;
@@ -24,24 +23,15 @@
       justify-content: flex-start;
       padding-top: 16px;
     }
-
     #ui {
       z-index: 10;
       text-align: center;
       margin-bottom: 12px;
     }
-
     #score {
       font-size: 20px;
       text-shadow: 0 0 6px rgba(125, 206, 160, 0.6);
     }
-
-    #feathers {
-      font-size: 18px;
-      margin-top: 4px;
-      text-shadow: 0 0 6px rgba(255, 100, 100, 0.6);
-    }
-
     #pond {
       width: 95vw;
       height: 70vh;
@@ -50,7 +40,6 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-
     .water {
       width: 100%;
       height: 100%;
@@ -61,29 +50,15 @@
       left: 0;
       z-index: 1;
     }
-
     .duck {
       position: absolute;
       width: 60px;
       height: 70px;
+      background: url('duck_normal.png') no-repeat center;
+      background-size: contain;
       cursor: pointer;
       z-index: 5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
-
-    .duck img {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      transition: transform 0.2s ease;
-    }
-
-    .duck:hover img {
-      transform: scale(1.1);
-    }
-
     .btn {
       background: transparent;
       border: 2px solid #7DCEA0;
@@ -95,11 +70,9 @@
       font-size: 14px;
       transition: background 0.3s;
     }
-
     .btn:hover {
       background: rgba(125, 206, 160, 0.15);
     }
-
     #duckCount {
       position: absolute;
       top: 16px;
@@ -109,9 +82,7 @@
       border-radius: 8px;
       font-size: 18px;
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
-      z-index: 20;
     }
-
     .quack-bubble {
       position: absolute;
       background: rgba(255, 255, 255, 0.9);
@@ -125,7 +96,6 @@
       transition: opacity 0.3s, transform 0.3s;
       z-index: 100;
     }
-
     /* Стили для окна квеста */
     #questModal {
       display: none;
@@ -137,7 +107,6 @@
       height: 100%;
       background-color: rgba(0,0,0,0.7);
     }
-
     .modal-content {
       background-color: #1a2d3f;
       color: #E0F7FA;
@@ -149,7 +118,6 @@
       max-width: 600px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-
     .close {
       color: #E0F7FA;
       float: right;
@@ -157,19 +125,16 @@
       font-weight: bold;
       cursor: pointer;
     }
-
     .close:hover,
     .close:focus {
       color: #7DCEA0;
       text-decoration: none;
       cursor: pointer;
     }
-
     #questJournalContent {
       margin-top: 20px;
       line-height: 1.6;
     }
-
     .quest-task {
       background: #2c3e50;
       color: #E0F7FA;
@@ -181,48 +146,33 @@
       transition: all 0.3s ease;
       font-size: 14px;
     }
-
     .quest-task:hover {
       background: #34495e;
       transform: translateX(5px);
       border-left-color: #E0F7FA;
     }
-
     .quest-done {
       background: #27ae60;
       text-decoration: line-through;
       color: #bdc3c7;
     }
-
     /* Стили для кровавого пера */
     .bloody-feather {
-      position: absolute;
-      width: 30px;
-      height: 40px;
-      background: url('feather.png') no-repeat center;
-      background-size: contain;
-      z-index: 6;
       animation: float 3s ease-in-out infinite;
       filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
-      cursor: pointer;
     }
-
     @keyframes float {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
       50% { transform: translateY(-10px) rotate(5deg); }
     }
-
     /* Стили для утки-почтальона */
     .postman-duck {
-      width: 70px;
-      height: 80px;
+      animation: bounce 2s ease-in-out infinite;
     }
-
-    .postman-duck img {
-      width: 100%;
-      height: auto;
+    @keyframes bounce {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(5px); }
     }
-
     /* Кнопка журнала квестов */
     #questJournal {
       position: absolute;
@@ -236,13 +186,11 @@
       z-index: 20;
       border: 1px solid #7DCEA0;
     }
-
     #questJournal:hover {
       background: rgba(125, 206, 160, 0.2);
     }
-
-    /* === СИСТЕМА ДИАЛОГОВ === */
-
+    /* === НОВЫЕ СТИЛИ ДЛЯ СИСТЕМЫ КВЕСТА === */
+    /* Стили для системы диалогов */
     .dialog-overlay {
       position: fixed;
       top: 0;
@@ -255,7 +203,6 @@
       align-items: center;
       z-index: 10000;
     }
-
     .dialog-content {
       background: #1a2d3f;
       border: 2px solid #7DCEA0;
@@ -267,14 +214,12 @@
       color: #E0F7FA;
       box-shadow: 0 0 20px rgba(125, 206, 160, 0.3);
     }
-
     .dialog-content h3 {
       color: #7DCEA0;
       margin-bottom: 15px;
       text-align: center;
       font-size: 18px;
     }
-
     .dialog-message {
       margin: 15px 0;
       line-height: 1.5;
@@ -284,14 +229,12 @@
       border-radius: 8px;
       border-left: 3px solid #7DCEA0;
     }
-
     .dialog-choices {
       display: flex;
       flex-direction: column;
       gap: 10px;
       margin-top: 20px;
     }
-
     .dialog-choice {
       background: #2c3e50;
       border: 1px solid #7DCEA0;
@@ -303,24 +246,91 @@
       text-align: left;
       font-size: 14px;
     }
-
     .dialog-choice:hover {
       background: #34495e;
       transform: translateX(5px);
       border-color: #E0F7FA;
     }
-
     .dialog-choice:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none !important;
     }
-
+    /* Стили для NPC */
+    .npc {
+      animation: npc-float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .npc:hover {
+      filter: drop-shadow(0 0 12px rgba(125, 206, 160, 0.8));
+      transform: scale(1.1);
+    }
+    @keyframes npc-float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    /* Статистика квеста */
+    .quest-stats {
+      background: #2c3e50;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border: 1px solid #7DCEA0;
+    }
+    .quest-stats div {
+      margin: 5px 0;
+      padding: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    /* Предметы квеста */
+    .quest-item {
+      transition: all 0.3s ease;
+    }
+    .quest-item:hover {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8));
+    }
+    /* Индикаторы прогресса */
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #2c3e50;
+      border-radius: 5px;
+      margin: 5px 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7DCEA0, #27ae60);
+      border-radius: 5px;
+      transition: width 0.5s ease;
+    }
+    /* Анимации для разных NPC */
+    .npc-postman {
+      animation: postman-delivery 2s ease-in-out infinite;
+    }
+    @keyframes postman-delivery {
+      0%, 100% { transform: translateX(0px) rotate(0deg); }
+      25% { transform: translateX(5px) rotate(5deg); }
+      75% { transform: translateX(-5px) rotate(-5deg); }
+    }
+    .npc-lucia {
+      animation: lucia-tremble 4s ease-in-out infinite;
+    }
+    @keyframes lucia-tremble {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(2px) rotate(1deg); }
+      50% { transform: translateY(0px) rotate(0deg); }
+      75% { transform: translateY(2px) rotate(-1deg); }
+    }
+    /* Стили для требований в диалогах */
     .requirement-not-met {
       opacity: 0.7;
       position: relative;
     }
-
     .requirement-not-met::after {
       content: "❌ Требование не выполнено";
       position: absolute;
@@ -330,21 +340,17 @@
       font-size: 10px;
       color: #ff6b6b;
     }
-
-    /* Всплывающее уведомление */
-    .notification {
-      position: fixed;
+    /* Стили для выбора с расходом ресурсов */
+    .cost-choice {
+      position: relative;
+      border-left: 3px solid #f39c12 !important;
+    }
+    .cost-choice::before {
+      content: "💸";
+      position: absolute;
+      left: 8px;
       top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.85);
-      color: #ff6b6b;
-      padding: 12px 24px;
-      border-radius: 8px;
-      z-index: 20000;
-      font-size: 16px;
-      pointer-events: none;
-      white-space: nowrap;
+      transform: translateY(-50%);
     }
   </style>
 </head>
@@ -362,262 +368,16 @@
   <div id="pond">
     <div class="water"></div>
   </div>
-
   <!-- Модальное окно Квеста -->
   <div id="questModal">
     <div class="modal-content">
       <span class="close">&times;</span>
       <h2>Досье: Тени Забвения на Утином Озере</h2>
       <div id="questJournalContent">
-        <div class="quest-task">Найди кровавое перо</div>
-        <div class="quest-task">Поговори с уткой-почтальоном</div>
-        <div class="quest-task">Собери 5 перьев</div>
+        <!-- Сюда будет загружаться контент -->
       </div>
     </div>
   </div>
-
-  <script>
-    // --- Глобальные переменные ---
-    let score = 0;
-    let feathers = 0;
-    let duckCount = 0;
-    let bloodyFeatherAdded = false;
-    let postmanAdded = false;
-
-    // --- DOM элементы ---
-    const scoreEl = document.getElementById('score');
-    const feathersEl = document.getElementById('feathers');
-    const duckCountEl = document.getElementById('duckCount');
-    const pond = document.getElementById('pond');
-    const questModal = document.getElementById('questModal');
-    const questJournalBtn = document.getElementById('questJournal');
-    const closeModal = document.querySelector('.close');
-
-    // --- Вспомогательные функции ---
-    function updateUI() {
-      scoreEl.textContent = `Зернышек: ${score}`;
-      feathersEl.textContent = `Перьев: ${feathers}`;
-      duckCountEl.textContent = `Уток: ${duckCount}`;
-    }
-
-    function showNotification(text) {
-      const notif = document.createElement('div');
-      notif.className = 'notification';
-      notif.textContent = text;
-      document.body.appendChild(notif);
-      setTimeout(() => {
-        notif.remove();
-      }, 2000);
-    }
-
-    function getRandomPosition() {
-      const x = Math.random() * (pond.clientWidth - 60);
-      const y = Math.random() * (pond.clientHeight - 70);
-      return { x, y };
-    }
-
-    function addDuck(type = 'normal') {
-      const duck = document.createElement('div');
-      duck.className = 'duck';
-
-      // Создаем img внутри утки
-      const img = document.createElement('img');
-      let imgSrc = '';
-
-      if (type === 'hat') {
-        imgSrc = 'duck_hat_walk.png'; // по умолчанию — ходьба
-      } else if (type === 'sunglasses') {
-        imgSrc = 'duck_sunglasses_walk.png';
-      } else {
-        imgSrc = 'duck_normal_walk.png';
-      }
-
-      img.src = imgSrc;
-      img.alt = type + ' duck';
-      duck.appendChild(img);
-
-      // Позиция
-      const pos = getRandomPosition();
-      duck.style.left = `${pos.x}px`;
-      duck.style.top = `${pos.y}px`;
-
-      // Обработчик клика — меняет анимацию на "клевание"
-      duck.addEventListener('click', () => {
-        if (type === 'hat') {
-          img.src = 'duck_hat_pecking.png';
-          setTimeout(() => {
-            img.src = 'duck_hat_walk.png';
-          }, 500);
-        } else if (type === 'sunglasses') {
-          img.src = 'duck_sunglasses_pecking.png';
-          setTimeout(() => {
-            img.src = 'duck_sunglasses_walk.png';
-          }, 500);
-        } else {
-          img.src = 'duck_normal_pecking.png';
-          setTimeout(() => {
-            img.src = 'duck_normal_walk.png';
-          }, 500);
-        }
-        score++;
-        updateUI();
-      });
-
-      pond.appendChild(duck);
-    }
-
-    function addBloodyFeather() {
-      const feather = document.createElement('div');
-      feather.className = 'bloody-feather';
-      const pos = getRandomPosition();
-      feather.style.left = `${pos.x}px`;
-      feather.style.top = `${pos.y}px`;
-      feather.addEventListener('click', () => {
-        feathers++;
-        updateUI();
-        feather.remove();
-        showNotification('+1 кровавое перо!');
-      });
-      pond.appendChild(feather);
-    }
-
-    function addPostmanDuck() {
-      if (postmanAdded) return;
-      const postman = document.createElement('div');
-      postman.className = 'duck npc postman-duck';
-      postman.style.left = '20%';
-      postman.style.top = '60%';
-
-      const img = document.createElement('img');
-      img.src = 'duck_postman.png';
-      img.alt = 'Postman Duck';
-      postman.appendChild(img);
-
-      postman.addEventListener('click', startQuestDialog);
-      pond.appendChild(postman);
-      postmanAdded = true;
-    }
-
-    function startQuestDialog() {
-      const overlay = document.createElement('div');
-      overlay.className = 'dialog-overlay';
-      overlay.innerHTML = `
-        <div class="dialog-content">
-          <h3>Утка-Почтальон</h3>
-          <div class="dialog-message">
-            Кря-кря! Я принёс тебе важное письмо... но оно запечатано кровавым пером. 
-            Чтобы его открыть, тебе нужно собрать <strong>5 кровавых перьев</strong>.
-          </div>
-          <div class="dialog-choices">
-            <div class="dialog-choice" onclick="closeDialog()">«Спасибо, я поищу перья»</div>
-            <div class="${feathers >= 5 ? 'dialog-choice' : 'dialog-choice requirement-not-met'}" 
-                 onclick="checkFeathers()">
-              «У меня уже есть 5 перьев!»
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-    }
-
-    function closeDialog() {
-      const overlay = document.querySelector('.dialog-overlay');
-      if (overlay) overlay.remove();
-    }
-
-    function checkFeathers() {
-      if (feathers >= 5) {
-        closeDialog();
-        showNotification('Письмо открыто! Новая глава...');
-      } else {
-        showNotification('Нужно 5 перьев!');
-      }
-    }
-
-    // --- Обработчики кнопок ---
-    document.getElementById('buyNormal').addEventListener('click', () => {
-      if (score >= 20) {
-        score -= 20;
-        duckCount++;
-        addDuck('normal');
-        updateUI();
-      } else {
-        showNotification('Нужно 20 зернышек!');
-      }
-    });
-
-    document.getElementById('buyHat').addEventListener('click', () => {
-      if (score >= 50) {
-        score -= 50;
-        duckCount++;
-        addDuck('hat');
-        updateUI();
-      } else {
-        showNotification('Нужно 50 зернышек!');
-      }
-    });
-
-    document.getElementById('buySunglasses').addEventListener('click', () => {
-      if (score >= 100) {
-        score -= 100;
-        duckCount++;
-        addDuck('sunglasses');
-        updateUI();
-
-        // Добавляем кровавое перо ТОЛЬКО ОДИН РАЗ
-        if (!bloodyFeatherAdded) {
-          setTimeout(() => {
-            addBloodyFeather();
-            bloodyFeatherAdded = true;
-            // После пера — добавляем почтальона
-            setTimeout(addPostmanDuck, 1000);
-          }, 500);
-        }
-      } else {
-        showNotification('Нужно 100 зернышек для утки в очках!');
-      }
-    });
-
-    document.getElementById('exchangeFeather').addEventListener('click', () => {
-      if (score >= 150) {
-        score -= 150;
-        feathers += 1;
-        updateUI();
-        showNotification('+1 перо за обмен!');
-      } else {
-        showNotification('Нужно 150 зернышек для обмена!');
-      }
-    });
-
-    // --- Клик по пруду — добавление зернышек ---
-    pond.addEventListener('click', (e) => {
-      if (!e.target.closest('.duck') && !e.target.classList.contains('bloody-feather')) {
-        score++;
-        updateUI();
-      }
-    });
-
-    // --- Журнал квестов ---
-    questJournalBtn.addEventListener('click', () => {
-      questModal.style.display = 'block';
-    });
-
-    closeModal.addEventListener('click', () => {
-      questModal.style.display = 'none';
-    });
-
-    window.addEventListener('click', (e) => {
-      if (e.target === questModal) {
-        questModal.style.display = 'none';
-      }
-    });
-
-    // --- Инициализация ---
-    updateUI();
-
-    // Экспорт функций для inline-обработчиков (в диалоге)
-    window.closeDialog = closeDialog;
-    window.checkFeathers = checkFeathers;
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
