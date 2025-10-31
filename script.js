@@ -5,7 +5,10 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-let gameData = JSON.parse(localStorage.getItem('duckIsle_v2')) || {
+// === ИСПОЛЬЗУЕМ НОВЫЙ КЛЮЧ, ЧТОБЫ СБРОСИТЬ ВСЕХ ===
+const SAVE_KEY = 'duckIsle_v4';
+
+let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
   feathers: 0,
   ducks: 1,
@@ -23,6 +26,7 @@ let gameData = JSON.parse(localStorage.getItem('duckIsle_v2')) || {
   questPageActive: false
 };
 
+// Глобальные переменные
 let pondEl = null;
 let scoreEl = null;
 let feathersEl = null;
@@ -43,7 +47,20 @@ let dialogClose = null;
 
 let ducks = [];
 
-// Всплывающее облако "кря"
+// Сохранение
+function saveGame() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
+}
+
+// Обновление интерфейса
+function updateUI() {
+  if (!scoreEl || !feathersEl || !duckCountEl) return;
+  scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
+  feathersEl.textContent = `Перьев: ${gameData.feathers}`;
+  duckCountEl.textContent = `Уток: ${ducks.length}`;
+}
+
+// Всплывающее "кря"
 function showQuackBubble(duckElement) {
   if (!duckElement || !duckElement.getBoundingClientRect) return;
   const rect = duckElement.getBoundingClientRect();
@@ -67,19 +84,7 @@ function showQuackBubble(duckElement) {
   }, 1000);
 }
 
-function updateUI() {
-  if (!scoreEl || !feathersEl || !duckCountEl || !buyNormalBtn || !buyHatBtn || !buySunglassesBtn || !exchangeBtn) return;
-  scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
-  feathersEl.textContent = `Перьев: ${gameData.feathers}`;
-  duckCountEl.textContent = `Уток: ${ducks.length}`;
-  buyNormalBtn.disabled = gameData.seeds < 20;
-  buyHatBtn.disabled = gameData.seeds < 50;
-  const normalDucks = ducks.filter(d => d.type === 'normal').length;
-  const hatDucks = ducks.filter(d => d.type === 'hat').length;
-  buySunglassesBtn.disabled = gameData.seeds < 100 || normalDucks < 5 || hatDucks < 5;
-  exchangeBtn.disabled = gameData.seeds < 150 || gameData.dailyExchangeCount >= 5;
-}
-
+// Класс утки
 class Duck {
   constructor(id, type) {
     this.id = id;
@@ -201,17 +206,13 @@ class Duck {
   }
 }
 
-function saveGame() {
-  localStorage.setItem('duckIsle_v2', JSON.stringify(gameData));
-}
-
-function loadInitialDuck() {
-  if (ducks.length === 0 && gameData.ducks === 1 && gameData.nextDuckId === 1) {
-    const initialDuck = new Duck(0, 'normal');
-    ducks.push(initialDuck);
-    gameData.nextDuckId = 1;
-    saveGame();
-  }
+// Создание утки
+function createDuck(type) {
+  const newDuck = new Duck(gameData.nextDuckId++, type);
+  ducks.push(newDuck);
+  gameData.ducks++;
+  saveGame();
+  updateUI();
 }
 
 // === ФУНКЦИИ КВЕСТА ===
@@ -331,11 +332,8 @@ function showDialog(taskName) {
 function handleAnswer(taskName, answer) {
   switch(taskName) {
     case 'bloodFeather':
-      if (answer === '1') {
-        alert('Вы внимательно осматриваете перо. На нем действительно видны следы крови.');
-      } else if (answer === '2') {
-        alert('Вы решаете проигнорировать перо. Но оно продолжает вас тревожить.');
-      }
+      if (answer === '1') alert('Вы внимательно осматриваете перо. На нем действительно видны следы крови.');
+      else if (answer === '2') alert('Вы решаете проигнорировать перо. Но оно продолжает вас тревожить.');
       break;
     case 'postmanDuck':
       if (answer === '1') {
@@ -364,11 +362,9 @@ function handleAnswer(taskName, answer) {
       }
       break;
     case 'talkedToGavriil':
-      if (answer === '1') {
-        alert('Инспектор Гавриил становится более жестким в дальнейших диалогах.');
-      } else if (answer === '2') {
-        alert('Инспектор Гавриил ценит вашу искренность и дает вам 24 часа на расследование.');
-      } else if (answer === '3') {
+      if (answer === '1') alert('Инспектор Гавриил становится более жестким в дальнейших диалогах.');
+      else if (answer === '2') alert('Инспектор Гавриил ценит вашу искренность и дает вам 24 часа на расследование.');
+      else if (answer === '3') {
         alert('Инспектор Гавриил дает вам возможность получать информацию от него.');
         gameData.talkedToVivien = true;
         saveGame();
@@ -379,35 +375,26 @@ function handleAnswer(taskName, answer) {
         alert('Вивьен паникует и уходит, но +10% к шкале правды.');
         gameData.talkedToDario = true;
         saveGame();
-      } else if (answer === '2') {
-        alert('Вивьен дает ложную информацию: "Вы были с Элианом в саду". -5% к шкале правды.');
-      } else if (answer === '3') {
-        alert('Вивьен становится "доверенным лицом", но блокирует прогресс памяти на 1 этап.');
-      }
+      } else if (answer === '2') alert('Вивьен дает ложную информацию: "Вы были с Элианом в саду". -5% к шкале правды.');
+      else if (answer === '3') alert('Вивьен становится "доверенным лицом", но блокирует прогресс памяти на 1 этап.');
       break;
     case 'talkedToDario':
       if (answer === '1') {
         alert('Дарио шокирован: "Я знаю, кто писал эти записки!"');
         gameData.talkedToElian = true;
         saveGame();
-      } else if (answer === '2') {
-        alert('Дарио становится телохранителем.');
-      } else if (answer === '3') {
-        alert('Дарио начинает мстить.');
-      }
+      } else if (answer === '2') alert('Дарио становится телохранителем.');
+      else if (answer === '3') alert('Дарио начинает мстить.');
       break;
     case 'talkedToElian':
-      if (answer === '1') {
-        alert('Элиан обижен, но продолжает помогать. Отношения: "Начало с чистого листа"');
-      } else if (answer === '2') {
-        alert('Элиан активно включается в помощь. Отношения: "Луч надежды"');
-      } else if (answer === '3') {
-        alert('Элиан помогает тайно, но с обидой. Отношения: "Отвергнутый поклонник"');
-      }
+      if (answer === '1') alert('Элиан обижен, но продолжает помогать. Отношения: "Начало с чистого листа"');
+      else if (answer === '2') alert('Элиан активно включается в помощь. Отношения: "Луч надежды"');
+      else if (answer === '3') alert('Элиан помогает тайно, но с обидой. Отношения: "Отвергнутый поклонник"');
       break;
   }
 }
 
+// Основная инициализация
 function initGame() {
   pondEl = document.getElementById('pond');
   scoreEl = document.getElementById('score');
@@ -432,9 +419,15 @@ function initGame() {
     return;
   }
 
-  loadInitialDuck();
+  // === СОЗДАЁМ НАЧАЛЬНУЮ УТКУ ПОСЛЕ ЗАГРУЗКИ POND ===
+  if (ducks.length === 0) {
+    const initialDuck = new Duck(0, 'normal');
+    ducks.push(initialDuck);
+  }
+
   updateUI();
 
+  // Кнопки покупки
   buyNormalBtn.addEventListener('click', () => {
     if (gameData.seeds >= 20) {
       gameData.seeds -= 20;
@@ -511,9 +504,9 @@ function initGame() {
     }
   });
 
-  // Закрытие модальных окон
-  closeModal?.addEventListener('click', () => { questModal.style.display = "none"; });
-  dialogClose?.addEventListener('click', () => { dialogModal.style.display = "none"; });
+  // Закрытие модалок
+  closeModal?.addEventListener('click', () => questModal.style.display = "none");
+  dialogClose?.addEventListener('click', () => dialogModal.style.display = "none");
   window.addEventListener('click', (e) => {
     if (e.target === questModal) questModal.style.display = "none";
     if (e.target === dialogModal) dialogModal.style.display = "none";
@@ -535,12 +528,11 @@ function initGame() {
     });
     questJournalContent.innerHTML = content;
     document.querySelectorAll('.quest-task:not(.quest-done)').forEach(task => {
-      task.addEventListener('click', () => {
-        showDialog(task.getAttribute('data-task'));
-      });
+      task.addEventListener('click', () => showDialog(task.getAttribute('data-task')));
     });
   }
 
+  // Автоматический пик и обновление
   setInterval(() => {
     ducks.forEach(duck => {
       if (duck.state !== 'rest' && Math.random() < 0.2) {
@@ -552,14 +544,10 @@ function initGame() {
   setInterval(() => {
     ducks.forEach(duck => duck.update());
   }, 100);
+
+  // Обновляем UI ещё раз после полной инициализации
+  setTimeout(updateUI, 300);
 }
 
-function createDuck(type) {
-  const newDuck = new Duck(gameData.nextDuckId++, type);
-  ducks.push(newDuck);
-  gameData.ducks++;
-  saveGame();
-  updateUI();
-}
-
+// Запуск
 document.addEventListener('DOMContentLoaded', initGame);
