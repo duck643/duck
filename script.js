@@ -6,7 +6,7 @@ if (tg) {
 }
 
 // === ИСПОЛЬЗУЕМ НОВЫЙ КЛЮЧ, ЧТОБЫ СБРОСИТЬ ВСЕХ ===
-const SAVE_KEY = 'duckIsle_v4';
+const SAVE_KEY = 'duckIsle_v5';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
@@ -23,7 +23,8 @@ let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   talkedToElian: false,
   bloodFeatherVisible: false,
   postmanDuckVisible: false,
-  questPageActive: false
+  questPageActive: false,
+  currentQuestStep: 0 // 0 - не начато, 1 - перо, 2 - почтальон, 3 - Вивьен, 4 - Гавриил, 5 - Дарио, 6 - Элиан
 };
 
 // Глобальные переменные
@@ -249,77 +250,149 @@ function showPostmanDuck() {
   saveGame();
 }
 
+// Основной диалоговый интерфейс
 function showDialog(taskName) {
   dialogModal.style.display = "flex";
+  dialogHeader.textContent = '';
+  dialogText.innerHTML = '';
+
+  // Портреты
+  const portraitContainer = document.createElement('div');
+  portraitContainer.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    align-items: center;
+  `;
+
+  // Портрет Люсии (игрок - наблюдатель, но она главная)
+  const luciaPortrait = document.createElement('img');
+  luciaPortrait.src = 'duck_Lucia.png';
+  luciaPortrait.style.cssText = `
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  `;
+  portraitContainer.appendChild(luciaPortrait);
+
+  // Портрет собеседника
+  const npcPortrait = document.createElement('img');
+  let npcName = '';
+  let npcImg = 'duck_postman.png'; // по умолчанию
+
   switch(taskName) {
     case 'bloodFeather':
-      dialogHeader.textContent = 'Кровавое перо';
-      dialogText.textContent = 'Вы нашли странное кровавое перо на берегу. Оно выглядит очень подозрительно.';
-      dialogOptions.innerHTML = `
+      npcName = 'Кровавое перо';
+      npcImg = 'feather.png';
+      break;
+    case 'postmanDuck':
+      npcName = 'Утка-почтальон';
+      npcImg = 'duck_postman.png';
+      break;
+    case 'metLucia':
+      npcName = 'Люсия';
+      npcImg = 'duck_Lucia.png';
+      break;
+    case 'talkedToGavriil':
+      npcName = 'Инспектор Гавриил';
+      npcImg = 'duck_Gavriil.png';
+      break;
+    case 'talkedToVivien':
+      npcName = 'Вивьен';
+      npcImg = 'duck_Vivien.png';
+      break;
+    case 'talkedToDario':
+      npcName = 'Дарио';
+      npcImg = 'duck_hat.png'; // временно, если нет отдельного файла
+      break;
+    case 'talkedToElian':
+      npcName = 'Элиан';
+      npcImg = 'duck_sunglasses.png'; // временно
+      break;
+  }
+
+  npcPortrait.src = npcImg;
+  npcPortrait.style.cssText = `
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  `;
+  portraitContainer.appendChild(npcPortrait);
+
+  dialogHeader.appendChild(portraitContainer);
+
+  // Текст диалога
+  let dialogueText = '';
+  let optionsHTML = '';
+
+  switch(taskName) {
+    case 'bloodFeather':
+      dialogueText = '<strong>Кровавое перо:</strong><br>Вы нашли странное кровавое перо на берегу. Оно выглядит очень подозрительно.';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">Посмотреть поближе.</div>
         <div class="dialog-option" data-answer="2">Проигнорировать.</div>
       `;
       break;
     case 'postmanDuck':
-      dialogHeader.textContent = 'Утка-почтальон';
-      dialogText.textContent = 'Утка-почтальон подлетает к вам и говорит: "О нет-нет-нет! Вы не должны были этого находить! Спрячьте! Быстро!"';
-      dialogOptions.innerHTML = `
+      dialogueText = '<strong>Утка-почтальон:</strong><br>«О нет-нет-нет! Вы не должны были этого находить! Спрячьте! Быстро!»';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">"Что происходит? Чье это перо?"</div>
         <div class="dialog-option" data-answer="2">"Я не хочу проблем. Убирайтесь!"</div>
         <div class="dialog-option" data-answer="3">"Расскажите всё, что знаете"</div>
       `;
       break;
     case 'metLucia':
-      dialogHeader.textContent = '/Люсия';
-      dialogText.textContent = 'Вы подходите к домику на краю озера. Внутри сидит напуганная утка с пустым взглядом.';
-      dialogOptions.innerHTML = `
+      dialogueText = '<strong>Люсия:</strong><br>Вы подходите к домику на краю озера. Внутри сидит напуганная утка с пустым взглядом.';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">"Успокойтесь, я здесь чтобы помочь"</div>
         <div class="dialog-option" data-answer="2">"Что вы помните о той ночи?"</div>
         <div class="dialog-option" data-answer="3">"Взгляните на это перо..."</div>
       `;
       break;
     case 'talkedToGavriil':
-      dialogHeader.textContent = 'Инспектор Гавриил';
-      dialogText.textContent = 'Инспектор Гавриил врывается в дом с обвинениями: "/Люсия! Фамильное перо моего рода исчезло вместе с моим братом! Все улики указывают на тебя!"';
-      dialogOptions.innerHTML = `
+      dialogueText = '<strong>Инспектор Гавриил:</strong><br>«/Люсия! Фамильное перо моего рода исчезло вместе с моим братом! Все улики указывают на тебя!»';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">"Я ничего не помню! Отстаньте!"</div>
         <div class="dialog-option" data-answer="2">"Я видел/а тень... и крик..."</div>
         <div class="dialog-option" data-answer="3">"Дайте мне время, я всё вспомню"</div>
       `;
       break;
     case 'talkedToVivien':
-      dialogHeader.textContent = 'Вивьен';
-      dialogText.textContent = 'Элегантная утка в вуали приходит "навестить" /Люсию: "Милый/милая, не мучай себя воспоминаниями. Некоторые вещи лучше забыть."';
-      dialogOptions.innerHTML = `
+      dialogueText = '<strong>Вивьен:</strong><br>«Элегантная утка в вуали приходит "навестить" /Люсию: "Милый/милая, не мучай себя воспоминаниями. Некоторые вещи лучше забыть."»';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">"Вы что-то скрываете, Вивьен?"</div>
         <div class="dialog-option" data-answer="2">"Может, вы помните что-то о той ночи?"</div>
         <div class="dialog-option" data-answer="3">"Спасибо за заботу"</div>
       `;
       break;
     case 'talkedToDario':
-      dialogHeader.textContent = 'Дарио';
-      dialogText.textContent = 'Бывший возлюбленный появляется с обвинениями: "Притворяешься, что не помнишь? Как удобно! Забыл/а и наши "делишки"?"';
-      dialogOptions.innerHTML = `
+      dialogueText = '<strong>Дарио:</strong><br>«Бывший возлюбленный появляется с обвинениями: "Притворяешься, что не помнишь? Как удобно! Забыл/а и наши "делишки"?"»';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">"Какие делишки? Мы расстались!"</div>
         <div class="dialog-option" data-answer="2">"Извини меня, я был/а не в себе"</div>
         <div class="dialog-option" data-answer="3">"Это ты подставил/а меня!"</div>
       `;
       break;
     case 'talkedToElian':
-      dialogHeader.textContent = 'Элиан';
-      dialogText.textContent = 'Элегантный селезень подходит к грустящему /Люсии: "/Люсия... Я слышал, ты вернулся/вернулась. Как ты?"';
-      dialogOptions.innerHTML = `
+      dialogueText = '<strong>Элиан:</strong><br>«Элегантный селезень подходит к грустящему /Люсии: "/Люсия... Я слышал, ты вернулся/вернулась. Как ты?"»';
+      optionsHTML = `
         <div class="dialog-option" data-answer="1">"Мы знакомы?"</div>
         <div class="dialog-option" data-answer="2">"Ваше лицо кажется знакомым"</div>
         <div class="dialog-option" data-answer="3">"Отстаньте! Все "друзья" мне только вредят!"</div>
       `;
       break;
     default:
-      dialogHeader.textContent = 'Ошибка';
-      dialogText.textContent = 'Неизвестный пункт квеста.';
-      dialogOptions.innerHTML = '';
+      dialogueText = 'Ошибка: Неизвестный пункт квеста.';
+      optionsHTML = '';
       break;
   }
+
+  dialogText.innerHTML = dialogueText;
+  dialogOptions.innerHTML = optionsHTML;
+
+  // Обработчики ответов
   document.querySelectorAll('.dialog-option').forEach(option => {
     option.addEventListener('click', () => {
       const answer = option.getAttribute('data-answer');
@@ -332,19 +405,24 @@ function showDialog(taskName) {
 function handleAnswer(taskName, answer) {
   switch(taskName) {
     case 'bloodFeather':
-      if (answer === '1') alert('Вы внимательно осматриваете перо. На нем действительно видны следы крови.');
-      else if (answer === '2') alert('Вы решаете проигнорировать перо. Но оно продолжает вас тревожить.');
+      if (answer === '1') {
+        alert('Вы внимательно осматриваете перо. На нем действительно видны следы крови.');
+      } else if (answer === '2') {
+        alert('Вы решаете проигнорировать перо. Но оно продолжает вас тревожить.');
+      }
       break;
     case 'postmanDuck':
       if (answer === '1') {
         alert('Утка-почтальон нервно объясняет: "Это... часть большой тайны. Одна утка в опасности!"');
         gameData.metLucia = true;
+        gameData.currentQuestStep = 2; // Переходим к следующему шагу
         saveGame();
       } else if (answer === '2') {
         alert('Утка-почтальон уходит, но через 10 минут возвращается с сообщением: "Они нашли его/её дом! Теперь только вы можете помочь!"');
       } else if (answer === '3') {
         alert('Утка-почтальон дает детали: "Ищите утку по имени /Люсия. Он/она потерял/а память, а его/её обвиняют в ужасном преступлении"');
         gameData.metLucia = true;
+        gameData.currentQuestStep = 2;
         saveGame();
       }
       break;
@@ -352,21 +430,26 @@ function handleAnswer(taskName, answer) {
       if (answer === '1') {
         alert('/Люсия немного расслабляется. "Спасибо, что помогаете."');
         gameData.talkedToGavriil = true;
+        gameData.currentQuestStep = 3;
         saveGame();
       } else if (answer === '2') {
         alert('/Люсия впадает в панику: "Не могу! Голова болит!"');
       } else if (answer === '3') {
         alert('При взгляде на перо у /Люсии происходит прорыв памяти: "Я... я видел/а как двое спорили! Один был ранен!"');
         gameData.talkedToGavriil = true;
+        gameData.currentQuestStep = 3;
         saveGame();
       }
       break;
     case 'talkedToGavriil':
-      if (answer === '1') alert('Инспектор Гавриил становится более жестким в дальнейших диалогах.');
-      else if (answer === '2') alert('Инспектор Гавриил ценит вашу искренность и дает вам 24 часа на расследование.');
-      else if (answer === '3') {
+      if (answer === '1') {
+        alert('Инспектор Гавриил становится более жестким в дальнейших диалогах.');
+      } else if (answer === '2') {
+        alert('Инспектор Гавриил ценит вашу искренность и дает вам 24 часа на расследование.');
+      } else if (answer === '3') {
         alert('Инспектор Гавриил дает вам возможность получать информацию от него.');
         gameData.talkedToVivien = true;
+        gameData.currentQuestStep = 4;
         saveGame();
       }
       break;
@@ -374,22 +457,34 @@ function handleAnswer(taskName, answer) {
       if (answer === '1') {
         alert('Вивьен паникует и уходит, но +10% к шкале правды.');
         gameData.talkedToDario = true;
+        gameData.currentQuestStep = 5;
         saveGame();
-      } else if (answer === '2') alert('Вивьен дает ложную информацию: "Вы были с Элианом в саду". -5% к шкале правды.');
-      else if (answer === '3') alert('Вивьен становится "доверенным лицом", но блокирует прогресс памяти на 1 этап.');
+      } else if (answer === '2') {
+        alert('Вивьен дает ложную информацию: "Вы были с Элианом в саду". -5% к шкале правды.');
+      } else if (answer === '3') {
+        alert('Вивьен становится "доверенным лицом", но блокирует прогресс памяти на 1 этап.');
+      }
       break;
     case 'talkedToDario':
       if (answer === '1') {
         alert('Дарио шокирован: "Я знаю, кто писал эти записки!"');
         gameData.talkedToElian = true;
+        gameData.currentQuestStep = 6;
         saveGame();
-      } else if (answer === '2') alert('Дарио становится телохранителем.');
-      else if (answer === '3') alert('Дарио начинает мстить.');
+      } else if (answer === '2') {
+        alert('Дарио становится телохранителем.');
+      } else if (answer === '3') {
+        alert('Дарио начинает мстить.');
+      }
       break;
     case 'talkedToElian':
-      if (answer === '1') alert('Элиан обижен, но продолжает помогать. Отношения: "Начало с чистого листа"');
-      else if (answer === '2') alert('Элиан активно включается в помощь. Отношения: "Луч надежды"');
-      else if (answer === '3') alert('Элиан помогает тайно, но с обидой. Отношения: "Отвергнутый поклонник"');
+      if (answer === '1') {
+        alert('Элиан обижен, но продолжает помогать. Отношения: "Начало с чистого листа"');
+      } else if (answer === '2') {
+        alert('Элиан активно включается в помощь. Отношения: "Луч надежды"');
+      } else if (answer === '3') {
+        alert('Элиан помогает тайно, но с обидой. Отношения: "Отвергнутый поклонник"');
+      }
       break;
   }
 }
@@ -513,7 +608,7 @@ function initGame() {
   });
 
   function loadQuestJournal() {
-    let content = `<p><strong>Досье:</strong></p>`;
+    let content = `<p><strong>Досье: Тени Забвения на Утином Озере</strong></p>`;
     const tasks = [
       { key: 'bloodFeather', text: 'Найдено кровавое перо', done: true },
       { key: 'metLucia', text: 'Встреча с /Люсией', done: gameData.metLucia },
