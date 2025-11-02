@@ -5,8 +5,7 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-// === КЛЮЧ ДЛЯ СБРОСА ===
-const SAVE_KEY = 'duckIsle_v12';
+const SAVE_KEY = 'duckIsle_v14';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
@@ -23,9 +22,6 @@ let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   talkedToElian: false,
   bloodFeatherVisible: false,
   postmanDuckVisible: false,
-  questPageActive: false,
-
-  // === СИСТЕМА ВЛИЯНИЯ ===
   truthLevel: 0,
   trustGavriil: 0,
   relationshipVivien: 0,
@@ -44,9 +40,6 @@ let buyHatBtn = null;
 let buySunglassesBtn = null;
 let exchangeBtn = null;
 let questJournalBtn = null;
-let questModal = null;
-let closeModal = null;
-let questJournalContent = null;
 let dialogModal = null;
 let dialogHeader = null;
 let dialogText = null;
@@ -54,14 +47,14 @@ let dialogOptions = null;
 let dialogClose = null;
 
 let ducks = [];
-let npcs = []; // Массив NPC
+let npcs = [];
 
 // Сохранение
 function saveGame() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
 }
 
-// Обновление интерфейса
+// Обновление UI
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl) return;
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
@@ -69,7 +62,7 @@ function updateUI() {
   duckCountEl.textContent = `Уток: ${ducks.length}`;
 }
 
-// Всплывающее "кря"
+// Кря-облако
 function showQuackBubble(duckElement) {
   if (!duckElement || !duckElement.getBoundingClientRect) return;
   const rect = duckElement.getBoundingClientRect();
@@ -93,7 +86,7 @@ function showQuackBubble(duckElement) {
   }, 1000);
 }
 
-// Класс утки
+// Утка
 class Duck {
   constructor(id, type) {
     this.id = id;
@@ -113,11 +106,11 @@ class Duck {
     this.updateImage();
   }
   updateImage() {
-    let img = './duck_normal.png'; // ⚠️ Явный путь
+    let img = './duck_normal.png';
     if (this.type === 'hat') img = './duck_hat.png';
     if (this.type === 'sunglasses') img = './duck_sunglasses.png';
     if (this.state === 'swim') {
-      if (this.type === 'normal') img = './duck_swim.png';
+      if (this.type === 'normal') img = './duck_normal_swim.png';
       if (this.type === 'hat') img = './duck_hat_swim.png';
       if (this.type === 'sunglasses') img = './duck_sunglasses_swim.png';
     } else if (this.state === 'walk' && this.walkFrame === 1) {
@@ -144,7 +137,7 @@ class Duck {
       return;
     }
     this.state = 'peck';
-    let img = './duck_pecking.png';
+    let img = './duck_normal_pecking.png';
     if (this.type === 'hat') img = './duck_hat_pecking.png';
     if (this.type === 'sunglasses') img = './duck_sunglasses_pecking.png';
     this.element.style.backgroundImage = `url('${img}')`;
@@ -215,10 +208,11 @@ class Duck {
   }
 }
 
-// Класс NPC
+// NPC
 class NPC {
-  constructor(name, image, x, y) {
+  constructor(name, key, image, x, y) {
     this.name = name;
+    this.key = key;
     this.image = image;
     this.x = x;
     this.y = y;
@@ -235,7 +229,7 @@ class NPC {
     this.element.style.zIndex = '10';
     pondEl.appendChild(this.element);
     this.element.addEventListener('click', () => {
-      showDialog(this.name);
+      showDialog(this.key);
     });
   }
 }
@@ -248,8 +242,7 @@ function createDuck(type) {
   updateUI();
 }
 
-// === ФУНКЦИИ КВЕСТА ===
-
+// Квест-объекты
 function showBloodFeather() {
   if (gameData.bloodFeatherVisible) return;
   const feather = document.createElement('div');
@@ -260,7 +253,6 @@ function showBloodFeather() {
   feather.addEventListener('click', () => {
     gameData.bloodFeatherVisible = true;
     saveGame();
-    // Пролог
     alert('Голова... так тяжело. Я ничего не помню. Где я? Это мой дом? В клюве... что-то колет. Перо? Чьё оно? И почему на нём... пятна? Помоги мне... Вспомнить...');
     setTimeout(() => {
       alert('Воспоминание: Ночь. Вода. Чьё-то отражение в луже. Чувство паники.');
@@ -283,101 +275,44 @@ function showPostmanDuck() {
   postman.addEventListener('click', () => {
     gameData.postmanDuckVisible = true;
     saveGame();
-    showDialog('Утка-Почтальон');
+    showDialog('postmanDuck');
   });
   gameData.postmanDuckVisible = true;
   saveGame();
 }
 
-// Показать NPC
 function spawnNPCs() {
-  if (gameData.talkedToVivien) {
-    if (!npcs.some(n => n.name === 'Вивьен')) {
-      const vivien = new NPC('Вивьен', './duck_Vivien.png', 150, 300);
-      npcs.push(vivien);
-    }
+  if (gameData.talkedToVivien && !npcs.some(n => n.key === 'talkedToVivien')) {
+    npcs.push(new NPC('Вивьен', 'talkedToVivien', './duck_Vivien.png', 150, 300));
   }
-
-  if (gameData.talkedToGavriil) {
-    if (!npcs.some(n => n.name === 'Инспектор Гавриил')) {
-      const gavriil = new NPC('Инспектор Гавриил', './duck_Gavriil.png', 300, 200);
-      npcs.push(gavriil);
-    }
+  if (gameData.talkedToGavriil && !npcs.some(n => n.key === 'talkedToGavriil')) {
+    npcs.push(new NPC('Гавриил', 'talkedToGavriil', './duck_Gavriil.png', 300, 200));
   }
-
-  if (gameData.clue_DarioNote) {
-    if (!npcs.some(n => n.name === 'Дарио')) {
-      const dario = new NPC('Дарио', './duck_hat.png', 400, 350);
-      npcs.push(dario);
-    }
+  if (gameData.clue_DarioNote && !npcs.some(n => n.key === 'talkedToDario')) {
+    npcs.push(new NPC('Дарио', 'talkedToDario', './duck_Dario.png', 400, 350));
   }
-
-  if (gameData.talkedToElian) {
-    if (!npcs.some(n => n.name === 'Элиан')) {
-      const elian = new NPC('Элиан', './duck_sunglasses.png', 500, 250);
-      npcs.push(elian);
-    }
+  if (gameData.talkedToElian && !npcs.some(n => n.key === 'talkedToElian')) {
+    npcs.push(new NPC('Элиан', 'talkedToElian', './duck_Elian.png', 500, 250));
   }
 }
 
-// Проверка условий
-function canTalkToDario() {
-  return gameData.clue_DarioNote;
-}
-
-function checkEnding() {
-  const t = gameData.truthLevel;
-  const g = gameData.trustGavriil;
-  const d = gameData.relationshipDario;
-  const e = gameData.relationshipElian;
-
-  // Секретная плохая концовка
-  if (d >= 50 && t < 50 && e <= 20) {
-    gameData.ending = 'goldenCage';
-    alert('— Ты в безопасности, моя любовь. Никто больше не причинит тебе вреда. Никто не тронет твою память. Теперь ты навсегда моя.');
-    alert('Дарио запирает дверь подвала.');
-    return;
-  }
-
-  if (t >= 70 && g >= 40) {
-    gameData.ending = 'truth';
-    alert('Сильвиан разоблачён! Он арестован. Вы свободны!');
-    if (e >= 60) {
-      alert('Вы остаётесь с Элианом. Будущее светло и спокойно.');
-    } else if (d >= 60) {
-      alert('Дарио, видя вашу силу, меняется. Вы начинаете трудные, но страстные отношения.');
-    } else {
-      alert('Вы остаётесь одна, но свободная и сильная.');
-    }
-    return;
-  }
-
-  if (e >= 50) {
-    gameData.ending = 'escape';
-    alert('Вы с Элианом тайно покидаете остров. Правда остаётся скрытой, но у вас есть друг друга и покой.');
-    return;
-  }
-
-  if (d <= -50) {
-    gameData.ending = 'betrayal';
-    alert('Дарио сдаёт вас властям в обмен на помилование. Вы в тюрьме.');
-    return;
-  }
-
-  gameData.ending = 'amnesia';
-  alert('Память так и не вернулась. Вы остаётесь одна на берегу озера, с клеймом изгнанницы.');
-}
-
+// Диалоги
 function showDialog(taskName) {
   dialogModal.style.display = "flex";
   dialogHeader.textContent = '';
   dialogText.innerHTML = '';
 
-  // Портреты (текстовые метки)
   const portraitContainer = document.createElement('div');
   portraitContainer.style.cssText = `text-align: center; margin-bottom: 10px; font-weight: bold;`;
 
   let speaker = taskName;
+  switch(taskName) {
+    case 'postmanDuck': speaker = 'Утка-Почтальон'; break;
+    case 'talkedToVivien': speaker = 'Вивьен'; break;
+    case 'talkedToGavriil': speaker = 'Инспектор Гавриил'; break;
+    case 'talkedToDario': speaker = 'Дарио'; break;
+    case 'talkedToElian': speaker = 'Элиан'; break;
+  }
   portraitContainer.textContent = speaker;
   dialogHeader.appendChild(portraitContainer);
 
@@ -385,68 +320,55 @@ function showDialog(taskName) {
   let optionsHTML = '';
 
   switch(taskName) {
-    case 'Утка-Почтальон':
-      dialogueText = '«Люсия! Ты в опасности! Все думают, что это ты! Ищи Вивьен — она что-то знает, она видела... Но будь осторожна, она, как змея в перьях.»';
+    case 'postmanDuck':
+      dialogueText = '«Люсия! Ты в опасности! Все думают, что это ты! Ищи Вивьен — она что-то знает...»';
       optionsHTML = '<div class="dialog-option" data-answer="ok">"Хорошо..."</div>';
       break;
-
-    case 'Вивьен':
-      dialogueText = '«Ах, Люсия, бедняжка! Ты выглядишь ужасно. Тебе стоит просто забыть эту ночь. Поверь мне, некоторые тайны лучше остаются погребёнными.»';
+    case 'talkedToVivien':
+      dialogueText = '«Ах, Люсия, бедняжка! Тебе стоит просто забыть эту ночь...»';
       optionsHTML = `
-        <div class="dialog-option" data-answer="aggressive">«Я должна знать правду! Что ты скрываешь?»</div>
-        <div class="dialog-option" data-answer="trusting">«Вивьен, я доверяю только тебе. Помоги мне, пожалуйста».</div>
-        <div class="dialog-option" data-answer="neutral">«Я понимаю... Спасибо за совет».</div>
+        <div class="dialog-option" data-answer="aggressive">«Я должна знать правду!»</div>
+        <div class="dialog-option" data-answer="trusting">«Помоги мне, Вивьен».</div>
+        <div class="dialog-option" data-answer="neutral">«Спасибо за совет».</div>
       `;
       break;
-
-    case 'Инспектор Гавриил':
-      dialogueText = '«Люсия. У меня есть веские доказательства. Это перо... оно с фамильного герба. С пером моего брата, Сильвиана. Что ты с ним сделала?!»';
-      alert('Воспоминание: Два силуэта, братья, яростно спорят. Слово "наследство".');
+    case 'talkedToGavriil':
+      dialogueText = '«Люсия! Это перо с фамильного герба. С пером моего брата, Сильвиана!»';
+      alert('Воспоминание: Два силуэта спорят. Слово "наследство".');
       optionsHTML = '';
-
       if (gameData.truthLevel >= 20) {
-        optionsHTML += `<div class="dialog-option" data-answer="truth">«Я помню их ссору! Сильвиан и ты... вы спорили о наследстве!»</div>`;
+        optionsHTML += `<div class="dialog-option" data-answer="truth">«Я помню вашу ссору!»</div>`;
       }
-
-      optionsHTML += `
-        <div class="dialog-option" data-answer="deny">«Я невиновна! Дай мне время, я всё докажу!»</div>
-      `;
-
+      optionsHTML += `<div class="dialog-option" data-answer="deny">«Я ничего не помню!»</div>`;
       if (gameData.feathers >= 2) {
-        optionsHTML += `<div class="dialog-option cost-choice" data-answer="bribe">«Я могу заплатить за время...» (2 пера)</div>`;
+        optionsHTML += `<div class="dialog-option cost-choice" data-answer="bribe">«Дайте время...» (2 пера)</div>`;
       }
       break;
-
-    case 'Дарио':
-      if (!canTalkToDario()) {
+    case 'talkedToDario':
+      if (!gameData.clue_DarioNote) {
         dialogueText = 'Дарио молча отворачивается.';
         optionsHTML = '<div class="dialog-option" data-answer="leave">"Ладно..."</div>';
       } else {
-        dialogueText = '«Ты нашла записку. И что? Вспомнила наконец, кто твой настоящий друг? Или пришла хвастаться своими новыми воспоминаниями с этим бледным Элианом?»';
-        alert('Воспоминание: Дарио крепко держит её за крыло. "Ты всегда была моей, Люсия!"');
+        dialogueText = '«Ты нашла записку?.. Тогда слушай...»';
+        alert('Воспоминание: "Ты всегда была моей, Люсия!"');
         optionsHTML = `
-          <div class="dialog-option" data-answer="confront">«Это ты во всём виноват! Это из-за твоей ревности!»</div>
-          <div class="dialog-option" data-answer="plead">«Дарио, мне страшно. Помоги мне, пожалуйста».</div>
-          <div class="dialog-option" data-answer="unsure">«Я не знаю, кому верить...»</div>
+          <div class="dialog-option" data-answer="confront">«Это ты подставил меня!»</div>
+          <div class="dialog-option" data-answer="plead">«Помоги мне, пожалуйста...»</div>
         `;
       }
       break;
-
-    case 'Элиан':
-      dialogueText = '«Люсия... Я рад, что ты в порядке. Вернее, жива. Я боялся, что Сильвиан... что он тебя...»';
-      alert('Воспоминание: Элиан на земле, над ним нависает тёмный силуэт. Люсия бросается вперёд с криком.');
+    case 'talkedToElian':
+      dialogueText = '«Люсия... Я боялся, что Сильвиан... что он тебя...»';
+      alert('Воспоминание: Элиан на земле, Люсия бросается вперёд.');
       optionsHTML = '';
-
       if (gameData.relationshipElian >= 30) {
-        optionsHTML += `<div class="dialog-option" data-answer="trust">«Элиан, я помню... я помню, как защищала тебя! Что случилось потом?»</div>`;
+        optionsHTML += `<div class="dialog-option" data-answer="trust">«Я помню, как защищала тебя!»</div>`;
       }
-
       optionsHTML += `
-        <div class="dialog-option" data-answer="doubt">«Может, ты всё придумал? Мне страшно тебе верить».</div>
-        <div class="dialog-option" data-answer="askDario">«Дарио говорил, что Сильвиан жив. Это правда?»</div>
+        <div class="dialog-option" data-answer="doubt">«Мне страшно тебе верить...»</div>
+        <div class="dialog-option" data-answer="askDario">«Дарио говорил, Сильвиан жив?»</div>
       `;
       break;
-
     default:
       dialogueText = 'Ошибка.';
       optionsHTML = '<div class="dialog-option" data-answer="close">Закрыть</div>';
@@ -466,43 +388,38 @@ function showDialog(taskName) {
 
 function handleAnswer(taskName, answer) {
   switch(taskName) {
-    case 'Утка-Почтальон':
+    case 'postmanDuck':
       gameData.talkedToVivien = true;
       saveGame();
-      showDialog('Вивьен');
+      showDialog('talkedToVivien');
       break;
-
-    case 'Вивьен':
+    case 'talkedToVivien':
       if (answer === 'aggressive') {
-        gameData.truthLevel += 5;
-        gameData.relationshipVivien -= 10;
         gameData.clue_DarioNote = true;
-        alert('«Я видела, как тот грубиян Дарио что-то прятал в саду возле твоего дома. Возле старого дуба.»');
+        gameData.truthLevel += 5;
+        alert('«Я видела, как Дарио прятал записку у дуба!»');
       } else if (answer === 'trusting') {
-        gameData.relationshipVivien += 5;
         gameData.truthLevel -= 5;
-        alert('«Я видела, как ты уходила с Элианом. Он был так странно возбуждён. Может, он во всём виноват?»');
+        alert('«Ты была с Элианом. Он виноват?»');
       } else {
-        alert('Вивьен улыбается и уходит.');
+        alert('Вивьен уходит.');
       }
       gameData.talkedToVivien = true;
       saveGame();
-      spawnNPCs(); // 👈 Показываем следующих NPC
+      spawnNPCs();
       break;
-
-    case 'Инспектор Гавриил':
+    case 'talkedToGavriil':
       if (answer === 'truth') {
         gameData.trustGavriil += 30;
         gameData.truthLevel += 10;
-        alert('«Ты... ты права. Я дам тебе 24 часа.»');
+        alert('«Ты... права. У тебя 24 часа.»');
       } else if (answer === 'deny') {
         gameData.trustGavriil -= 20;
         alert('«У тебя есть 24 часа.»');
       } else if (answer === 'bribe') {
         if (gameData.feathers >= 2) {
           gameData.feathers -= 2;
-          gameData.trustGavriil -= 10;
-          alert('«У тебя есть 24 часа.»');
+          alert('«24 часа. Не подведи.»');
         } else {
           alert('Недостаточно перьев.');
           return;
@@ -512,38 +429,30 @@ function handleAnswer(taskName, answer) {
       saveGame();
       spawnNPCs();
       break;
-
-    case 'Дарио':
+    case 'talkedToDario':
       if (answer === 'confront') {
         gameData.relationshipDario -= 30;
-        gameData.truthLevel += 5;
-        alert('«Прекрасно! Раз так, вали сама!»');
+        alert('«Вали сама разбираться!»');
       } else if (answer === 'plead') {
         gameData.relationshipDario += 20;
-        gameData.truthLevel += 10;
-        alert('«Сильвиан не умер. Он психопат. Он подстроил всё это...»');
-      } else if (answer === 'unsure') {
-        gameData.relationshipDario += 5;
-        gameData.truthLevel += 5;
-        alert('«Думай что хочешь. Но знай, я говорю тебе правду.»');
+        alert('«Сильвиан подстроил всё это...»');
       }
       gameData.talkedToDario = true;
       saveGame();
       spawnNPCs();
       break;
-
-    case 'Элиан':
+    case 'talkedToElian':
       if (answer === 'trust') {
         gameData.relationshipElian += 40;
         gameData.truthLevel += 20;
-        alert('«Сильвиан напал на меня, чтобы выманить тебя... Он жив. Мы должны бежать!»');
+        alert('«Сильвиан напал на меня... Он жив. Бежим!»');
       } else if (answer === 'doubt') {
         gameData.relationshipElian -= 20;
-        alert('«Я понимаю... Просто знай, я всегда на твоей стороне.»');
+        alert('«Я всегда на твоей стороне...»');
       } else if (answer === 'askDario') {
         gameData.relationshipElian -= 10;
         gameData.relationshipDario += 10;
-        alert('«Он... сказал тебе это? Возможно, в его словах есть доля правды.»');
+        alert('«В его словах — правда...»');
       }
       gameData.talkedToElian = true;
       saveGame();
@@ -552,7 +461,7 @@ function handleAnswer(taskName, answer) {
   }
 }
 
-// Основная инициализация
+// Инициализация
 function initGame() {
   pondEl = document.getElementById('pond');
   scoreEl = document.getElementById('score');
@@ -563,9 +472,6 @@ function initGame() {
   buySunglassesBtn = document.getElementById('buySunglasses');
   exchangeBtn = document.getElementById('exchangeFeather');
   questJournalBtn = document.getElementById('questJournal');
-  questModal = document.getElementById('questModal');
-  closeModal = document.querySelector('.close');
-  questJournalContent = document.getElementById('questJournalContent');
   dialogModal = document.getElementById('dialogModal');
   dialogHeader = document.querySelector('.dialog-header');
   dialogText = document.querySelector('.dialog-text');
@@ -584,7 +490,6 @@ function initGame() {
 
   updateUI();
 
-  // === КНОПКИ ===
   buyNormalBtn.addEventListener('click', () => {
     if (gameData.seeds >= 20) {
       gameData.seeds -= 20;
@@ -611,14 +516,14 @@ function initGame() {
         showBloodFeather();
         showPostmanDuck();
         alert("Вы заметили странное кровавое перо на берегу...");
-        spawnNPCs(); // 👈 ДОБАВЛЕНЫЙ ВЫЗОВ
+        spawnNPCs();
       }
     } else {
-      let message = "Недостаточно зернышек или уток.\n";
-      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).\n`;
-      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks}).\n`;
-      if (hatDucks < 5) message += `- Нужно 5 уток в шляпе (у вас ${hatDucks}).`;
-      alert(message);
+      let msg = "Недостаточно зернышек или уток.\n";
+      if (gameData.seeds < 100) msg += `- Нужно 100 зернышек.\n`;
+      if (normalDucks < 5) msg += `- Нужно 5 обычных уток.\n`;
+      if (hatDucks < 5) msg += `- Нужно 5 уток в шляпе.`;
+      alert(msg);
     }
   });
 
@@ -648,13 +553,9 @@ function initGame() {
       alert("Купите утку в очках!");
       return;
     }
-    questModal.style.display = "block";
-    let content = `<p><strong>Досье: Тени Забвения</strong></p>`;
-    content += `<div>Правда: ${gameData.truthLevel}</div>`;
-    content += `<div>Доверие Гавриила: ${gameData.trustGavriil}</div>`;
-    content += `<div>Отношения с Дарио: ${gameData.relationshipDario}</div>`;
-    content += `<div>Отношения с Элианом: ${gameData.relationshipElian}</div>`;
-    questJournalContent.innerHTML = content;
+    // Открываем диалог по умолчанию
+    if (gameData.talkedToVivien) showDialog('talkedToVivien');
+    else if (gameData.postmanDuckVisible) showDialog('postmanDuck');
   });
 
   pondEl.addEventListener('click', (e) => {
@@ -665,11 +566,8 @@ function initGame() {
     }
   });
 
-  // Закрытие модалок
-  closeModal?.addEventListener('click', () => questModal.style.display = "none");
   dialogClose?.addEventListener('click', () => dialogModal.style.display = "none");
   window.addEventListener('click', (e) => {
-    if (e.target === questModal) questModal.style.display = "none";
     if (e.target === dialogModal) dialogModal.style.display = "none";
   });
 
