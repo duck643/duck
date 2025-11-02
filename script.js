@@ -8,7 +8,7 @@ if (tg) {
 const SAVE_KEY = 'duckIsle_v14';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
-  seeds: 20,
+  seeds: 10000,
   feathers: 0,
   ducks: 1,
   nextDuckId: 1,
