@@ -6,7 +6,7 @@ if (tg) {
 }
 
 // === КЛЮЧ ДЛЯ СБРОСА ===
-const SAVE_KEY = 'duckIsle_v8';
+const SAVE_KEY = 'duckIsle_v9';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
@@ -54,6 +54,7 @@ let dialogOptions = null;
 let dialogClose = null;
 
 let ducks = [];
+let npcs = []; // Массив NPC
 
 // Сохранение
 function saveGame() {
@@ -214,6 +215,31 @@ class Duck {
   }
 }
 
+// Класс NPC
+class NPC {
+  constructor(name, image, x, y) {
+    this.name = name;
+    this.image = image;
+    this.x = x;
+    this.y = y;
+    this.element = document.createElement('div');
+    this.element.className = 'npc';
+    this.element.style.left = this.x + 'px';
+    this.element.style.top = this.y + 'px';
+    this.element.style.backgroundImage = `url('${image}')`;
+    this.element.style.backgroundSize = 'contain';
+    this.element.style.width = '60px';
+    this.element.style.height = '70px';
+    this.element.style.cursor = 'pointer';
+    this.element.style.position = 'absolute';
+    this.element.style.zIndex = '10';
+    pondEl.appendChild(this.element);
+    this.element.addEventListener('click', () => {
+      showDialog(this.name);
+    });
+  }
+}
+
 function createDuck(type) {
   const newDuck = new Duck(gameData.nextDuckId++, type);
   ducks.push(newDuck);
@@ -240,7 +266,7 @@ function showBloodFeather() {
       alert('Воспоминание: Ночь. Вода. Чьё-то отражение в луже. Чувство паники.');
       gameData.truthLevel += 5;
       saveGame();
-      showDialog('postmanDuck');
+      showPostmanDuck();
     }, 1000);
   });
   gameData.bloodFeatherVisible = true;
@@ -257,10 +283,41 @@ function showPostmanDuck() {
   postman.addEventListener('click', () => {
     gameData.postmanDuckVisible = true;
     saveGame();
-    showDialog('postmanDuck');
+    showDialog('Утка-Почтальон');
   });
   gameData.postmanDuckVisible = true;
   saveGame();
+}
+
+// Показать NPC
+function spawnNPCs() {
+  if (gameData.talkedToVivien) {
+    if (!npchs.some(n => n.name === 'Вивьен')) {
+      const vivien = new NPC('Вивьен', 'duck_Vivien.png', 150, 300);
+      npcs.push(vivien);
+    }
+  }
+
+  if (gameData.talkedToGavriil) {
+    if (!npchs.some(n => n.name === 'Инспектор Гавриил')) {
+      const gavriil = new NPC('Инспектор Гавриил', 'duck_Gavriil.png', 300, 200);
+      npcs.push(gavriil);
+    }
+  }
+
+  if (gameData.clue_DarioNote) {
+    if (!npchs.some(n => n.name === 'Дарио')) {
+      const dario = new NPC('Дарио', 'duck_hat.png', 400, 350);
+      npcs.push(dario);
+    }
+  }
+
+  if (gameData.talkedToElian) {
+    if (!npchs.some(n => n.name === 'Элиан')) {
+      const elian = new NPC('Элиан', 'duck_sunglasses.png', 500, 250);
+      npcs.push(elian);
+    }
+  }
 }
 
 // Проверка условий
@@ -320,17 +377,7 @@ function showDialog(taskName) {
   const portraitContainer = document.createElement('div');
   portraitContainer.style.cssText = `text-align: center; margin-bottom: 10px; font-weight: bold;`;
 
-  let speaker = '';
-  switch(taskName) {
-    case 'postmanDuck': speaker = 'Утка-Почтальон'; break;
-    case 'talkedToVivien': speaker = 'Вивьен'; break;
-    case 'talkedToGavriil': speaker = 'Инспектор Гавриил'; break;
-    case 'talkedToDario': speaker = 'Дарио'; break;
-    case 'talkedToElian': speaker = 'Элиан'; break;
-    case 'finalChoice': speaker = 'Судьба'; break;
-    default: speaker = '???';
-  }
-
+  let speaker = taskName;
   portraitContainer.textContent = speaker;
   dialogHeader.appendChild(portraitContainer);
 
@@ -338,12 +385,12 @@ function showDialog(taskName) {
   let optionsHTML = '';
 
   switch(taskName) {
-    case 'postmanDuck':
+    case 'Утка-Почтальон':
       dialogueText = '«Люсия! Ты в опасности! Все думают, что это ты! Ищи Вивьен — она что-то знает, она видела... Но будь осторожна, она, как змея в перьях.»';
       optionsHTML = '<div class="dialog-option" data-answer="ok">"Хорошо..."</div>';
       break;
 
-    case 'talkedToVivien':
+    case 'Вивьен':
       dialogueText = '«Ах, Люсия, бедняжка! Ты выглядишь ужасно. Тебе стоит просто забыть эту ночь. Поверь мне, некоторые тайны лучше остаются погребёнными.»';
       optionsHTML = `
         <div class="dialog-option" data-answer="aggressive">«Я должна знать правду! Что ты скрываешь?»</div>
@@ -352,7 +399,7 @@ function showDialog(taskName) {
       `;
       break;
 
-    case 'talkedToGavriil':
+    case 'Инспектор Гавриил':
       dialogueText = '«Люсия. У меня есть веские доказательства. Это перо... оно с фамильного герба. С пером моего брата, Сильвиана. Что ты с ним сделала?!»';
       alert('Воспоминание: Два силуэта, братья, яростно спорят. Слово "наследство".');
       optionsHTML = '';
@@ -370,7 +417,7 @@ function showDialog(taskName) {
       }
       break;
 
-    case 'talkedToDario':
+    case 'Дарио':
       if (!canTalkToDario()) {
         dialogueText = 'Дарио молча отворачивается.';
         optionsHTML = '<div class="dialog-option" data-answer="leave">"Ладно..."</div>';
@@ -385,7 +432,7 @@ function showDialog(taskName) {
       }
       break;
 
-    case 'talkedToElian':
+    case 'Элиан':
       dialogueText = '«Люсия... Я рад, что ты в порядке. Вернее, жива. Я боялся, что Сильвиан... что он тебя...»';
       alert('Воспоминание: Элиан на земле, над ним нависает тёмный силуэт. Люсия бросается вперёд с криком.');
       optionsHTML = '';
@@ -398,25 +445,6 @@ function showDialog(taskName) {
         <div class="dialog-option" data-answer="doubt">«Может, ты всё придумал? Мне страшно тебе верить».</div>
         <div class="dialog-option" data-answer="askDario">«Дарио говорил, что Сильвиан жив. Это правда?»</div>
       `;
-      break;
-
-    case 'finalChoice':
-      dialogueText = 'Гавриил: «Время вышло, Люсия. Что ты можешь сказать в своё оправдание?»\nСильвиан (из тени): «Брат. Она убийца. Арестуй её.»';
-      optionsHTML = '';
-
-      if (gameData.truthLevel >= 70 && gameData.trustGavriil >= 40) {
-        optionsHTML += `<div class="dialog-option" data-answer="reveal">«Сильвиан жив! Он всё подстроил!»</div>`;
-      }
-
-      if (gameData.relationshipElian >= 50) {
-        optionsHTML += `<div class="dialog-option" data-answer="escape">«Элиан, давай уедем отсюда!»</div>`;
-      }
-
-      if (gameData.relationshipDario >= 50) {
-        optionsHTML += `<div class="dialog-option" data-answer="stayWithDario">«Дарио, я остаюсь с тобой».</div>`;
-      }
-
-      optionsHTML += `<div class="dialog-option" data-answer="nothing">... (молчать)</div>`;
       break;
 
     default:
@@ -438,13 +466,13 @@ function showDialog(taskName) {
 
 function handleAnswer(taskName, answer) {
   switch(taskName) {
-    case 'postmanDuck':
+    case 'Утка-Почтальон':
       gameData.talkedToVivien = true;
       saveGame();
-      showDialog('talkedToVivien');
+      showDialog('Вивьен');
       break;
 
-    case 'talkedToVivien':
+    case 'Вивьен':
       if (answer === 'aggressive') {
         gameData.truthLevel += 5;
         gameData.relationshipVivien -= 10;
@@ -459,9 +487,10 @@ function handleAnswer(taskName, answer) {
       }
       gameData.talkedToVivien = true;
       saveGame();
+      spawnNPCs(); // Показываем следующих NPC
       break;
 
-    case 'talkedToGavriil':
+    case 'Инспектор Гавриил':
       if (answer === 'truth') {
         gameData.trustGavriil += 30;
         gameData.truthLevel += 10;
@@ -481,9 +510,10 @@ function handleAnswer(taskName, answer) {
       }
       gameData.talkedToGavriil = true;
       saveGame();
+      spawnNPCs();
       break;
 
-    case 'talkedToDario':
+    case 'Дарио':
       if (answer === 'confront') {
         gameData.relationshipDario -= 30;
         gameData.truthLevel += 5;
@@ -499,9 +529,10 @@ function handleAnswer(taskName, answer) {
       }
       gameData.talkedToDario = true;
       saveGame();
+      spawnNPCs();
       break;
 
-    case 'talkedToElian':
+    case 'Элиан':
       if (answer === 'trust') {
         gameData.relationshipElian += 40;
         gameData.truthLevel += 20;
@@ -516,11 +547,7 @@ function handleAnswer(taskName, answer) {
       }
       gameData.talkedToElian = true;
       saveGame();
-      break;
-
-    case 'finalChoice':
-      // Все проверки внутри checkEnding
-      setTimeout(checkEnding, 500);
+      spawnNPCs();
       break;
   }
 }
