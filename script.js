@@ -6,7 +6,7 @@ if (tg) {
 }
 
 // === КЛЮЧ ДЛЯ СБРОСА ===
-const SAVE_KEY = 'duckIsle_v11';
+const SAVE_KEY = 'duckIsle_v12';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
