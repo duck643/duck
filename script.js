@@ -6,7 +6,7 @@ if (tg) {
 }
 
 // === КЛЮЧ ДЛЯ СБРОСА ===
-const SAVE_KEY = 'duckIsle_v9';
+const SAVE_KEY = 'duckIsle_v11';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
@@ -93,7 +93,7 @@ function showQuackBubble(duckElement) {
   }, 1000);
 }
 
-// Класс утки (без изменений)
+// Класс утки
 class Duck {
   constructor(id, type) {
     this.id = id;
@@ -113,13 +113,13 @@ class Duck {
     this.updateImage();
   }
   updateImage() {
-    let img = 'duck_normal.png';
-    if (this.type === 'hat') img = 'duck_hat.png';
-    if (this.type === 'sunglasses') img = 'duck_sunglasses.png';
+    let img = './duck_normal.png'; // ⚠️ Явный путь
+    if (this.type === 'hat') img = './duck_hat.png';
+    if (this.type === 'sunglasses') img = './duck_sunglasses.png';
     if (this.state === 'swim') {
-      if (this.type === 'normal') img = 'duck_swim.png';
-      if (this.type === 'hat') img = 'duck_hat_swim.png';
-      if (this.type === 'sunglasses') img = 'duck_sunglasses_swim.png';
+      if (this.type === 'normal') img = './duck_swim.png';
+      if (this.type === 'hat') img = './duck_hat_swim.png';
+      if (this.type === 'sunglasses') img = './duck_sunglasses_swim.png';
     } else if (this.state === 'walk' && this.walkFrame === 1) {
       img = img.replace('.png', '_walk.png');
     }
@@ -144,9 +144,9 @@ class Duck {
       return;
     }
     this.state = 'peck';
-    let img = 'duck_pecking.png';
-    if (this.type === 'hat') img = 'duck_hat_pecking.png';
-    if (this.type === 'sunglasses') img = 'duck_sunglasses_pecking.png';
+    let img = './duck_pecking.png';
+    if (this.type === 'hat') img = './duck_hat_pecking.png';
+    if (this.type === 'sunglasses') img = './duck_sunglasses_pecking.png';
     this.element.style.backgroundImage = `url('${img}')`;
     gameData.seeds += isAuto ? 2 : 1;
     saveGame();
@@ -292,29 +292,29 @@ function showPostmanDuck() {
 // Показать NPC
 function spawnNPCs() {
   if (gameData.talkedToVivien) {
-    if (!npchs.some(n => n.name === 'Вивьен')) {
-      const vivien = new NPC('Вивьен', 'duck_Vivien.png', 150, 300);
+    if (!npcs.some(n => n.name === 'Вивьен')) {
+      const vivien = new NPC('Вивьен', './duck_Vivien.png', 150, 300);
       npcs.push(vivien);
     }
   }
 
   if (gameData.talkedToGavriil) {
-    if (!npchs.some(n => n.name === 'Инспектор Гавриил')) {
-      const gavriil = new NPC('Инспектор Гавриил', 'duck_Gavriil.png', 300, 200);
+    if (!npcs.some(n => n.name === 'Инспектор Гавриил')) {
+      const gavriil = new NPC('Инспектор Гавриил', './duck_Gavriil.png', 300, 200);
       npcs.push(gavriil);
     }
   }
 
   if (gameData.clue_DarioNote) {
-    if (!npchs.some(n => n.name === 'Дарио')) {
-      const dario = new NPC('Дарио', 'duck_hat.png', 400, 350);
+    if (!npcs.some(n => n.name === 'Дарио')) {
+      const dario = new NPC('Дарио', './duck_hat.png', 400, 350);
       npcs.push(dario);
     }
   }
 
   if (gameData.talkedToElian) {
-    if (!npchs.some(n => n.name === 'Элиан')) {
-      const elian = new NPC('Элиан', 'duck_sunglasses.png', 500, 250);
+    if (!npcs.some(n => n.name === 'Элиан')) {
+      const elian = new NPC('Элиан', './duck_sunglasses.png', 500, 250);
       npcs.push(elian);
     }
   }
@@ -487,7 +487,7 @@ function handleAnswer(taskName, answer) {
       }
       gameData.talkedToVivien = true;
       saveGame();
-      spawnNPCs(); // Показываем следующих NPC
+      spawnNPCs(); // 👈 Показываем следующих NPC
       break;
 
     case 'Инспектор Гавриил':
@@ -610,13 +610,15 @@ function initGame() {
         saveGame();
         showBloodFeather();
         showPostmanDuck();
+        alert("Вы заметили странное кровавое перо на берегу...");
+        spawnNPCs(); // 👈 ДОБАВЛЕНЫЙ ВЫЗОВ
       }
     } else {
-      let msg = "Недостаточно зернышек или уток.\n";
-      if (gameData.seeds < 100) msg += `- Нужно 100 зернышек.\n`;
-      if (normalDucks < 5) msg += `- Нужно 5 обычных уток.\n`;
-      if (hatDucks < 5) msg += `- Нужно 5 уток в шляпе.`;
-      alert(msg);
+      let message = "Недостаточно зернышек или уток.\n";
+      if (gameData.seeds < 100) message += `- Нужно 100 зернышек (у вас ${Math.floor(gameData.seeds)}).\n`;
+      if (normalDucks < 5) message += `- Нужно 5 обычных уток (у вас ${normalDucks}).\n`;
+      if (hatDucks < 5) message += `- Нужно 5 уток в шляпе (у вас ${hatDucks}).`;
+      alert(message);
     }
   });
 
