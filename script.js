@@ -6,7 +6,7 @@ if (tg) {
 }
 
 // === ИСПОЛЬЗУЕМ НОВЫЙ КЛЮЧ, ЧТОБЫ СБРОСИТЬ ВСЕХ ===
-const SAVE_KEY = 'duckIsle_v5';
+const SAVE_KEY = 'duckIsle_v6';
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   seeds: 20,
@@ -265,18 +265,7 @@ function showDialog(taskName) {
     align-items: center;
   `;
 
-  // Портрет Люсии (игрок - наблюдатель, но она главная)
-  const luciaPortrait = document.createElement('img');
-  luciaPortrait.src = 'duck_Lucia.png';
-  luciaPortrait.style.cssText = `
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  `;
-  portraitContainer.appendChild(luciaPortrait);
-
-  // Портрет собеседника
+  // Портрет собеседника (слева)
   const npcPortrait = document.createElement('img');
   let npcName = '';
   let npcImg = 'duck_postman.png'; // по умолчанию
@@ -304,7 +293,7 @@ function showDialog(taskName) {
       break;
     case 'talkedToDario':
       npcName = 'Дарио';
-      npcImg = 'duck_hat.png'; // временно, если нет отдельного файла
+      npcImg = 'duck_hat.png'; // временно
       break;
     case 'talkedToElian':
       npcName = 'Элиан';
@@ -320,6 +309,17 @@ function showDialog(taskName) {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   `;
   portraitContainer.appendChild(npcPortrait);
+
+  // Портрет Люсии (справа) — игрок играет за неё
+  const luciaPortrait = document.createElement('img');
+  luciaPortrait.src = 'duck_Lucia.png';
+  luciaPortrait.style.cssText = `
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  `;
+  portraitContainer.appendChild(luciaPortrait);
 
   dialogHeader.appendChild(portraitContainer);
 
@@ -352,7 +352,7 @@ function showDialog(taskName) {
       `;
       break;
     case 'talkedToGavriil':
-      dialogueText = '<strong>Инспектор Гавриил:</strong><br>«/Люсия! Фамильное перо моего рода исчезло вместе с моим братом! Все улики указывают на тебя!»';
+      dialogueText = '<strong>Инспектор Гавриил:</strong><br>«Люсия! Фамильное перо моего рода исчезло вместе с моим братом! Все улики указывают на тебя!»';
       optionsHTML = `
         <div class="dialog-option" data-answer="1">"Я ничего не помню! Отстаньте!"</div>
         <div class="dialog-option" data-answer="2">"Я видел/а тень... и крик..."</div>
@@ -360,7 +360,7 @@ function showDialog(taskName) {
       `;
       break;
     case 'talkedToVivien':
-      dialogueText = '<strong>Вивьен:</strong><br>«Элегантная утка в вуали приходит "навестить" /Люсию: "Милый/милая, не мучай себя воспоминаниями. Некоторые вещи лучше забыть."»';
+      dialogueText = '<strong>Вивьен:</strong><br>«Элегантная утка в вуали приходит "навестить" Люсию: "Милая, не мучай себя воспоминаниями. Некоторые вещи лучше забыть."»';
       optionsHTML = `
         <div class="dialog-option" data-answer="1">"Вы что-то скрываете, Вивьен?"</div>
         <div class="dialog-option" data-answer="2">"Может, вы помните что-то о той ночи?"</div>
@@ -368,15 +368,15 @@ function showDialog(taskName) {
       `;
       break;
     case 'talkedToDario':
-      dialogueText = '<strong>Дарио:</strong><br>«Бывший возлюбленный появляется с обвинениями: "Притворяешься, что не помнишь? Как удобно! Забыл/а и наши "делишки"?"»';
+      dialogueText = '<strong>Дарио:</strong><br>«Бывший возлюбленный появляется с обвинениями: "Притворяешься, что не помнишь? Как удобно! Забыла и наши "делишки"?"»';
       optionsHTML = `
         <div class="dialog-option" data-answer="1">"Какие делишки? Мы расстались!"</div>
-        <div class="dialog-option" data-answer="2">"Извини меня, я был/а не в себе"</div>
-        <div class="dialog-option" data-answer="3">"Это ты подставил/а меня!"</div>
+        <div class="dialog-option" data-answer="2">"Извини меня, я была не в себе"</div>
+        <div class="dialog-option" data-answer="3">"Это ты подставил меня!"</div>
       `;
       break;
     case 'talkedToElian':
-      dialogueText = '<strong>Элиан:</strong><br>«Элегантный селезень подходит к грустящему /Люсии: "/Люсия... Я слышал, ты вернулся/вернулась. Как ты?"»';
+      dialogueText = '<strong>Элиан:</strong><br>«Элегантный селезень подходит к грустящей Люсии: "Люсия... Я слышал, ты вернулась. Как ты?"»';
       optionsHTML = `
         <div class="dialog-option" data-answer="1">"Мы знакомы?"</div>
         <div class="dialog-option" data-answer="2">"Ваше лицо кажется знакомым"</div>
@@ -415,12 +415,12 @@ function handleAnswer(taskName, answer) {
       if (answer === '1') {
         alert('Утка-почтальон нервно объясняет: "Это... часть большой тайны. Одна утка в опасности!"');
         gameData.metLucia = true;
-        gameData.currentQuestStep = 2; // Переходим к следующему шагу
+        gameData.currentQuestStep = 2;
         saveGame();
       } else if (answer === '2') {
         alert('Утка-почтальон уходит, но через 10 минут возвращается с сообщением: "Они нашли его/её дом! Теперь только вы можете помочь!"');
       } else if (answer === '3') {
-        alert('Утка-почтальон дает детали: "Ищите утку по имени /Люсия. Он/она потерял/а память, а его/её обвиняют в ужасном преступлении"');
+        alert('Утка-почтальон дает детали: "Ищите утку по имени Люсия. Она потеряла память, а её обвиняют в ужасном преступлении"');
         gameData.metLucia = true;
         gameData.currentQuestStep = 2;
         saveGame();
@@ -428,14 +428,14 @@ function handleAnswer(taskName, answer) {
       break;
     case 'metLucia':
       if (answer === '1') {
-        alert('/Люсия немного расслабляется. "Спасибо, что помогаете."');
+        alert('Люсия немного расслабляется. "Спасибо, что помогаете."');
         gameData.talkedToGavriil = true;
         gameData.currentQuestStep = 3;
         saveGame();
       } else if (answer === '2') {
-        alert('/Люсия впадает в панику: "Не могу! Голова болит!"');
+        alert('Люсия впадает в панику: "Не могу! Голова болит!"');
       } else if (answer === '3') {
-        alert('При взгляде на перо у /Люсии происходит прорыв памяти: "Я... я видел/а как двое спорили! Один был ранен!"');
+        alert('При взгляде на перо у Люсии происходит прорыв памяти: "Я... я видела как двое спорили! Один был ранен!"');
         gameData.talkedToGavriil = true;
         gameData.currentQuestStep = 3;
         saveGame();
@@ -611,7 +611,7 @@ function initGame() {
     let content = `<p><strong>Досье: Тени Забвения на Утином Озере</strong></p>`;
     const tasks = [
       { key: 'bloodFeather', text: 'Найдено кровавое перо', done: true },
-      { key: 'metLucia', text: 'Встреча с /Люсией', done: gameData.metLucia },
+      { key: 'metLucia', text: 'Встреча с Люсией', done: gameData.metLucia },
       { key: 'talkedToGavriil', text: 'Диалог с Инспектором Гавриилом', done: gameData.talkedToGavriil },
       { key: 'talkedToVivien', text: 'Знакомство с Вивьен', done: gameData.talkedToVivien },
       { key: 'talkedToDario', text: 'Встреча с Дарио', done: gameData.talkedToDario },
