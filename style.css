@@ -1,4 +1,3 @@
-/* style.css */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -21,7 +20,7 @@ body {
   text-align: center;
   margin-bottom: 12px;
 }
-#score {
+#score, #feathers {
   font-size: 20px;
   text-shadow: 0 0 6px rgba(125, 206, 160, 0.6);
 }
@@ -36,18 +35,17 @@ body {
 .water {
   width: 100%;
   height: 100%;
-  background: url('newlake.png') no-repeat center center;
+  background: url('./newlake.png') no-repeat center center;
   background-size: cover;
   position: absolute;
   top: 0;
   left: 0;
   z-index: 1;
 }
-.duck {
+.duck, .npc {
   position: absolute;
   width: 60px;
   height: 70px;
-  background: url('duck_normal.png') no-repeat center;
   background-size: contain;
   cursor: pointer;
   z-index: 5;
@@ -76,113 +74,6 @@ body {
   font-size: 18px;
   text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
 }
-.quack-bubble {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.9);
-  color: #0F1A2C;
-  padding: 6px 12px;
-  border-radius: 10px;
-  font-weight: bold;
-  font-size: 14px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s, transform 0.3s;
-  z-index: 100;
-}
-#questModal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.7);
-}
-.modal-content {
-  background-color: #1a2d3f;
-  color: #E0F7FA;
-  border: 2px solid #7DCEA0;
-  border-radius: 12px;
-  margin: 15% auto;
-  padding: 20px;
-  width: 80%;
-  max-width: 600px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-.close {
-  color: #E0F7FA;
-  float: right;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.close:hover,
-.close:focus {
-  color: #7DCEA0;
-  text-decoration: none;
-  cursor: pointer;
-}
-#questJournalContent {
-  margin-top: 20px;
-  line-height: 1.6;
-}
-.quest-task {
-  background: #2c3e50;
-  color: #E0F7FA;
-  padding: 12px;
-  margin: 10px 0;
-  border-left: 4px solid #7DCEA0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-.quest-task:hover {
-  background: #34495e;
-  transform: translateX(5px);
-  border-left-color: #E0F7FA;
-}
-.quest-done {
-  background: #27ae60;
-  text-decoration: line-through;
-  color: #bdc3c7;
-}
-
-/* Кровавое перо */
-.blood-feather {
-  width: 30px;
-  height: 30px;
-  background: red;
-  border-radius: 50%;
-  position: absolute;
-  animation: float 3s ease-in-out infinite;
-  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
-  cursor: pointer;
-  z-index: 6;
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(5deg); }
-}
-
-/* Утка-почтальон */
-.postman-duck {
-  width: 60px;
-  height: 70px;
-  background: url('duck_hat.png') no-repeat center;
-  background-size: contain;
-  position: absolute;
-  animation: bounce 2s ease-in-out infinite;
-  cursor: pointer;
-  z-index: 6;
-}
-@keyframes bounce {
-  0%, 100% { transform: translateX(0px); }
-  50% { transform: translateX(5px); }
-}
-
-/* Кнопка журнала */
 #questJournal {
   position: absolute;
   top: 16px;
@@ -198,8 +89,19 @@ body {
 #questJournal:hover {
   background: rgba(125, 206, 160, 0.2);
 }
-
-/* Диалоговое окно */
+.quack-bubble {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0F1A2C;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 100;
+}
 .dialog-overlay {
   position: fixed;
   top: 0;
@@ -259,4 +161,40 @@ body {
   background: #34495e;
   transform: translateX(5px);
   border-color: #E0F7FA;
+}
+.blood-feather {
+  width: 30px;
+  height: 30px;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
+  cursor: pointer;
+  z-index: 6;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+}
+.postman-duck {
+  width: 60px;
+  height: 70px;
+  background: url('./duck_postman.png') no-repeat center;
+  background-size: contain;
+  position: absolute;
+  animation: bounce 2s ease-in-out infinite;
+  cursor: pointer;
+  z-index: 6;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(0px); }
+  50% { transform: translateX(5px); }
+}
+.npc {
+  animation: npc-float 3s ease-in-out infinite;
+}
+@keyframes npc-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
