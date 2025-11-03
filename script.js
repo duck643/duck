@@ -5,11 +5,11 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-const SAVE_KEY = 'duckIsle_v15';
-const CURRENT_VERSION = 15;
+const SAVE_KEY = 'duckIsle_v16';
+const CURRENT_VERSION = 16;
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
-  seeds: 2000,
+  seeds: 20,
   feathers: 0,
   ducks: 1,
   nextDuckId: 1,
@@ -80,12 +80,10 @@ let dialogClose = null;
 let ducks = [];
 let npcs = [];
 
-// Сохранение
 function saveGame() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
 }
 
-// Обновление UI
 function updateUI() {
   if (!scoreEl || !feathersEl || !duckCountEl) return;
   scoreEl.textContent = `Зернышек: ${Math.floor(gameData.seeds)}`;
@@ -93,7 +91,6 @@ function updateUI() {
   duckCountEl.textContent = `Уток: ${ducks.length}`;
 }
 
-// Кря-облако
 function showQuackBubble(duckElement) {
   if (!duckElement || !duckElement.getBoundingClientRect) return;
   const rect = duckElement.getBoundingClientRect();
@@ -117,7 +114,6 @@ function showQuackBubble(duckElement) {
   }, 1000);
 }
 
-// Утка
 class Duck {
   constructor(id, type) {
     this.id = id;
@@ -239,7 +235,6 @@ class Duck {
   }
 }
 
-// NPC
 class NPC {
   constructor(name, key, image, x, y) {
     this.name = name;
@@ -273,7 +268,6 @@ function createDuck(type) {
   updateUI();
 }
 
-// Квест-объекты
 function showBloodFeather() {
   if (gameData.bloodFeatherVisible) return;
   const feather = document.createElement('div');
@@ -284,9 +278,9 @@ function showBloodFeather() {
   feather.addEventListener('click', () => {
     gameData.bloodFeatherVisible = true;
     saveGame();
-    alert('Голова... так тяжело. Я ничего не помню. Где я? Это мой дом? В клюве... что-то колет. Перо? Чьё оно? И почему на нём... пятна? Помоги мне... Вспомнить...');
+    alert('Голова... так тяжело. Я ничего не помню...');
     setTimeout(() => {
-      alert('Воспоминание: Ночь. Вода. Чьё-то отражение в луже. Чувство паники.');
+      alert('Воспоминание: Ночь. Вода. Чувство паники.');
       gameData.truthLevel += 5;
       saveGame();
       showPostmanDuck();
@@ -322,12 +316,31 @@ function spawnNPCs() {
   if (gameData.clue_DarioNote && !npcs.some(n => n.key === 'talkedToDario')) {
     npcs.push(new NPC('Дарио', 'talkedToDario', './duck_Dario.png', 400, 350));
   }
-  if (gameData.talkedToElian && !npcs.some(n => n.key === 'talkedToElian')) {
+  // ✅ Элиан появляется после Дарио или при высоком truthLevel
+  if ((gameData.talkedToDario || gameData.truthLevel >= 30) && !npcs.some(n => n.key === 'talkedToElian')) {
     npcs.push(new NPC('Элиан', 'talkedToElian', './duck_Elian.png', 500, 250));
   }
 }
 
-// Диалоги
+function checkEnding() {
+  const t = gameData.truthLevel;
+  const g = gameData.trustGavriil;
+  const d = gameData.relationshipDario;
+  const e = gameData.relationshipElian;
+
+  if (d >= 50 && t < 50 && e <= 20) {
+    alert('🔒 Дарио запирает вас в подвале. "Ты навсегда моя."');
+  } else if (t >= 70 && g >= 40) {
+    alert('✅ Сильвиан разоблачён! Вы свободны!');
+  } else if (e >= 50) {
+    alert('🕊️ Вы уезжаете с Элианом в тишину и безопасность.');
+  } else {
+    alert('🌫️ Память не вернулась. Вы остаётесь одна на берегу...');
+  }
+  gameData.ending = 'completed';
+  saveGame();
+}
+
 function showDialog(taskName) {
   dialogModal.style.display = "flex";
   dialogHeader.textContent = '';
@@ -352,7 +365,7 @@ function showDialog(taskName) {
 
   switch(taskName) {
     case 'postmanDuck':
-      dialogueText = '«Люсия! Ты в опасности! Все думают, что это ты! Ищи Вивьен — она что-то знает...»';
+      dialogueText = '«Люсия! Ищи Вивьен — она что-то знает...»';
       optionsHTML = '<div class="dialog-option" data-answer="ok">"Хорошо..."</div>';
       break;
     case 'talkedToVivien':
@@ -423,7 +436,7 @@ function handleAnswer(taskName, answer) {
       gameData.talkedToVivien = true;
       saveGame();
       showDialog('talkedToVivien');
-      spawnNPCs(); // ✅ ВАЖНО: появляется Вивьен на озере
+      spawnNPCs();
       break;
     case 'talkedToVivien':
       if (answer === 'aggressive') {
@@ -471,7 +484,7 @@ function handleAnswer(taskName, answer) {
       }
       gameData.talkedToDario = true;
       saveGame();
-      spawnNPCs();
+      spawnNPCs(); // ✅ Теперь Элиан появится
       break;
     case 'talkedToElian':
       if (answer === 'trust') {
@@ -489,11 +502,14 @@ function handleAnswer(taskName, answer) {
       gameData.talkedToElian = true;
       saveGame();
       spawnNPCs();
+      // ✅ Запускаем финал после всех диалогов
+      if (gameData.talkedToVivien && gameData.talkedToGavriil && gameData.talkedToDario && gameData.talkedToElian) {
+        setTimeout(checkEnding, 1000);
+      }
       break;
   }
 }
 
-// Инициализация
 function initGame() {
   pondEl = document.getElementById('pond');
   scoreEl = document.getElementById('score');
