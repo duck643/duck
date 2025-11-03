@@ -5,10 +5,11 @@ if (tg) {
   tg.disableVerticalSwipes();
 }
 
-const SAVE_KEY = 'duckIsle_v14';
+const SAVE_KEY = 'duckIsle_v15';
+const CURRENT_VERSION = 15;
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
-  seeds: 10000,
+  seeds: 20,
   feathers: 0,
   ducks: 1,
   nextDuckId: 1,
@@ -28,8 +29,38 @@ let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
   relationshipDario: 0,
   relationshipElian: 0,
   clue_DarioNote: false,
-  ending: null
+  ending: null,
+  version: CURRENT_VERSION
 };
+
+// Сброс при обновлении версии
+if (gameData.version !== CURRENT_VERSION) {
+  gameData = {
+    seeds: 20,
+    feathers: 0,
+    ducks: 1,
+    nextDuckId: 1,
+    dailyExchangeCount: 0,
+    lastExchangeDay: new Date().toDateString(),
+    questStarted: false,
+    metLucia: false,
+    talkedToGavriil: false,
+    talkedToVivien: false,
+    talkedToDario: false,
+    talkedToElian: false,
+    bloodFeatherVisible: false,
+    postmanDuckVisible: false,
+    truthLevel: 0,
+    trustGavriil: 0,
+    relationshipVivien: 0,
+    relationshipDario: 0,
+    relationshipElian: 0,
+    clue_DarioNote: false,
+    ending: null,
+    version: CURRENT_VERSION
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
+}
 
 let pondEl = null;
 let scoreEl = null;
@@ -392,6 +423,7 @@ function handleAnswer(taskName, answer) {
       gameData.talkedToVivien = true;
       saveGame();
       showDialog('talkedToVivien');
+      spawnNPCs(); // ✅ ВАЖНО: появляется Вивьен на озере
       break;
     case 'talkedToVivien':
       if (answer === 'aggressive') {
@@ -553,7 +585,6 @@ function initGame() {
       alert("Купите утку в очках!");
       return;
     }
-    // Открываем диалог по умолчанию
     if (gameData.talkedToVivien) showDialog('talkedToVivien');
     else if (gameData.postmanDuckVisible) showDialog('postmanDuck');
   });
