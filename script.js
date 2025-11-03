@@ -9,7 +9,7 @@ const SAVE_KEY = 'duckIsle_v15';
 const CURRENT_VERSION = 15;
 
 let gameData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {
-  seeds: 20,
+  seeds: 2000,
   feathers: 0,
   ducks: 1,
   nextDuckId: 1,
